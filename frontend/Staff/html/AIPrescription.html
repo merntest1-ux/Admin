@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI-powered weekly prescription system for student issue analysis and solutions">
+    <title>AI Weekly Prescription - Student Solutions</title>
+    <link rel="stylesheet" href="../css/AIPrescription.css">
+    <!-- Material Icons -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1><span class="material-symbols-outlined" style="vertical-align: middle;">calendar_month</span> Weekly AI Solution Prescriber</h1>
+                <h2 id="topReferral">Loading top referral...</h2>
+                <p>AI-powered analysis of trending student issues with actionable solutions</p>
+                <div class="badge"><span class="material-symbols-outlined" style="vertical-align: middle; font-size: 1rem;">alarm</span> One Prescription Per Week</div>
+            </div>
+            <button class="btn-back" onclick="window.location.href='Dashboard.html'" aria-label="Back to Dashboard">
+                &larr; Back to Dashboard
+            </button>
+        </header>
+
+        <!-- Status Banner -->
+        <div id="statusBanner" class="status-banner" role="status" aria-live="polite">
+            <div class="loading-spinner"></div>
+            <p>Loading prescription status...</p>
+        </div>
+
+        <!-- Main Content -->
+        <main class="content-card">
+            <!-- Tabs Navigation -->
+            <div class="tabs" role="tablist">
+                <button class="tab active" data-tab="prescribe" role="tab" aria-selected="true" aria-controls="tab-prescribe">
+                    <span class="material-symbols-outlined" style="vertical-align: middle; font-size: 1.2rem;">edit_note</span> New Prescription
+                </button>
+                <button class="tab" data-tab="current" role="tab" aria-selected="false" aria-controls="tab-current">
+                    <span class="material-symbols-outlined" style="vertical-align: middle; font-size: 1.2rem;">description</span> This Week
+                </button>
+                <button class="tab" data-tab="history" role="tab" aria-selected="false" aria-controls="tab-history">
+                    <span class="material-symbols-outlined" style="vertical-align: middle; font-size: 1.2rem;">history</span> History
+                </button>
+            </div>
+
+            <!-- Tab: New Prescription -->
+            <div id="tab-prescribe" class="tab-content active" role="tabpanel" aria-labelledby="tab-prescribe">
+                <form id="prescribeForm">
+                    <div class="form-group">
+                        <label for="issue">
+                            <strong>Trending Student Issue This Week</strong>
+                            <span style="color: var(--danger);">*</span>
+                        </label>
+                        <textarea 
+                            id="issue" 
+                            name="issue" 
+                            placeholder="Describe the trending issue among students this week...
+
+Examples:
+• High number of behavioral referrals
+• Increased anxiety/stress reports
+• Academic performance concerns
+• Attendance issues
+• Social conflicts or bullying incidents"
+                            required
+                            rows="7"
+                            aria-required="true"
+                        ></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label><strong>Additional Context</strong> <span style="color: var(--text-muted); font-weight: 400;">(Optional)</span></label>
+                        <div class="context-grid">
+                            <input 
+                                type="text" 
+                                id="affectedGrade" 
+                                placeholder="Affected grade level (e.g., Grade 10)"
+                                aria-label="Affected grade level"
+                            >
+                            <input 
+                                type="text" 
+                                id="numberOfCases" 
+                                placeholder="Number of cases/students"
+                                aria-label="Number of cases"
+                            >
+                            <input 
+                                type="text" 
+                                id="trend" 
+                                placeholder="Trend (e.g., Increased 40%)"
+                                aria-label="Trend data"
+                            >
+                            <input 
+                                type="text" 
+                                id="category" 
+                                placeholder="Category (Behavioral/Academic)"
+                                aria-label="Issue category"
+                            >
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" id="submitBtn">
+                        <span class="material-symbols-outlined" style="vertical-align: middle;">psychology</span> Generate AI Solution for This Week
+                    </button>
+                </form>
+            </div>
+
+            <!-- Tab: This Week -->
+            <div id="tab-current" class="tab-content" role="tabpanel" aria-labelledby="tab-current">
+                <div id="currentWeekContent" class="loading-container">
+                    <div class="loading-spinner"></div>
+                    <p>Loading current week's prescription...</p>
+                </div>
+            </div>
+
+            <!-- Tab: History -->
+            <div id="tab-history" class="tab-content" role="tabpanel" aria-labelledby="tab-history">
+                <div id="historyContent" class="loading-container">
+                    <div class="loading-spinner"></div>
+                    <p>Loading prescription history...</p>
+                </div>
+            </div>
+        </main>
+
+        <!-- Loading Overlay -->
+        <div id="loadingOverlay" class="loading-overlay" style="display: none;" role="alert" aria-live="assertive">
+            <div class="loading-card">
+                <div class="loading-spinner large"></div>
+                <p><span class="material-symbols-outlined" style="vertical-align: middle;">smart_toy</span> AI is analyzing the issue...</p>
+                <p class="loading-subtext">Generating actionable solutions</p>
+            </div>
+        </div>
+
+        <!-- Results Modal -->
+        <div id="resultsModal" class="modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+            <div class="modal-content">
+                <button class="modal-close" onclick="closeModal()" aria-label="Close modal">&times;</button>
+                <div id="resultsContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/AIPrescription.js"></script>
+</body>
+</html>
