@@ -85,43 +85,43 @@ require('dotenv').config();
 
 // ===== Default route - Login Page =====
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/pages/LoginForm.html'));
+  res.sendFile(path.join(__dirname, 'frontend/pages/LoginForm.html'));
 });
 
 // ===== Protected HTML Routes =====
 // Admin Dashboard
 app.get('/Dashboard.html', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/pages/Dashboard.html'));
+  res.sendFile(path.join(__dirname, 'frontend/pages/Dashboard.html'));
 });
 
 // User Management
 app.get('/UserManagement.html', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/pages/UserManagement.html'));
+  res.sendFile(path.join(__dirname, 'frontend/pages/UserManagement.html'));
 });
 
 // Category Management
 app.get('/Category.html', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/pages/Category.html'));
+  res.sendFile(path.join(__dirname, 'frontend/pages/Category.html'));
 });
 
 // Profile Settings
 app.get('/ProfileSettings.html', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/pages/ProfileSettings.html'));
+  res.sendFile(path.join(__dirname, 'frontend/pages/ProfileSettings.html'));
 });
 
 // Change Password
 app.get('/ChangePassword.html', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/pages/ChangePassword.html'));
+  res.sendFile(path.join(__dirname, 'frontend/pages/ChangePassword.html'));
 });
 
 // Login Form
 app.get('/LoginForm.html', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/pages/LoginForm.html'));
+  res.sendFile(path.join(__dirname, 'frontend/pages/LoginForm.html'));
 });
 
 // Adviser Routes
 app.get('/Adviser/html/Home.html', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/Adviser/pages/Home.html'));
+  res.sendFile(path.join(__dirname, 'frontend/Adviser/pages/Home.html'));
 });
 
 app.get('/Adviser/html/ProfileSettings.html', (req, res) => {
@@ -175,4 +175,5 @@ app.listen(PORT, () => {
 const analyticsRoutes = require('./routes/analytics');
 
 // Register the routes
+
 app.use('/api/analytics', analyticsRoutes);
