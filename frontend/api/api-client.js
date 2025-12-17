@@ -1,23 +1,45 @@
 // ============================================
-// COMPLETE API-CLIENT.JS - With Student Submissions + All Endpoints
+// COMPLETE API-CLIENT.JS - With Dynamic API URL + Student Submissions + All Endpoints
 // ============================================
 
-const API_BASE_URL = "http://localhost:3000/api";
+// 🔧 Automatically detect the correct API URL based on environment
+const API_BASE_URL = (() => {
+  const hostname = window.location.hostname;
+  
+  // Production (Render deployment)
+  if (hostname.includes('onrender.com')) {
+    return `${window.location.origin}/api`;
+  }
+  
+  // Localhost development
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return "http://localhost:3000/api";
+  }
+  
+  // Fallback
+  return `${window.location.origin}/api`;
+})();
+
+console.log("🌐 API Base URL configured:", API_BASE_URL);
+console.log("🌐 Current hostname:", window.location.hostname);
+console.log("🌐 Current origin:", window.location.origin);
 
 class APIClient {
   constructor() {
     this.token = localStorage.getItem("token") || localStorage.getItem("authToken") || null;
-    console.log("✅ APIClient initialized");
+    console.log("✅ APIClient initialized with API URL:", API_BASE_URL);
   }
 
   setToken(token) {
     this.token = token;
-    localStorage.setItem("token", token); localStorage.setItem("authToken", token);
+    localStorage.setItem("token", token);
+    localStorage.setItem("authToken", token);
   }
 
   removeToken() {
     this.token = null;
     localStorage.removeItem("authToken");
+    localStorage.removeItem("token");
     localStorage.removeItem("currentUser");
   }
 
@@ -438,4 +460,6 @@ if (typeof module !== 'undefined' && module.exports) {
 if (typeof window !== 'undefined') {
   window.apiClient = apiClient;
   console.log("✅ apiClient attached to window object");
+  console.log("✅ API will connect to:", API_BASE_URL);
 }
+
