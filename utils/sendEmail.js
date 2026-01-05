@@ -1,12 +1,7 @@
-// utils/sendEmail.js - Improved version with timeout
+// utils/sendEmail.js - Fixed version for Gmail
 const nodemailer = require("nodemailer");
 
 async function sendEmail({ to, subject, text }) {
-
-  console.log("📧 EMAIL_USER:", process.env.EMAIL_USER);
-  console.log("📧 EMAIL_PASS exists:", !!process.env.EMAIL_PASS);
-  console.log("📧 EMAIL_PASS length:", process.env.EMAIL_PASS?.length);
-  
   try {
     // Validate environment variables
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
@@ -17,10 +12,16 @@ async function sendEmail({ to, subject, text }) {
       };
     }
 
+    // Debug logs (remove after testing)
+    console.log("📧 Attempting to send email to:", to);
+    console.log("📧 Using EMAIL_USER:", process.env.EMAIL_USER);
+    console.log("📧 EMAIL_PASS configured:", !!process.env.EMAIL_PASS);
+
+    // Create transporter with Gmail SMTP settings
     const transporter = nodemailer.createTransport({
       host: 'smtp.gmail.com',
       port: 587,
-      secure: false, // Use TLS
+      secure: false, // Use STARTTLS
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
@@ -28,22 +29,10 @@ async function sendEmail({ to, subject, text }) {
       tls: {
         rejectUnauthorized: false
       },
-      connectionTimeout: 10000,
-      greetingTimeout: 10000,
-      socketTimeout: 10000,
+      connectionTimeout: 30000, // 30 seconds
+      greetingTimeout: 30000,
+      socketTimeout: 30000,
     });
-
-    // Verify transporter configuration (optional, but helpful for debugging)
-    /*try {
-      await transporter.verify();
-      console.log("✅ Email transporter verified");
-    } catch (verifyError) {
-      console.error("❌ Email transporter verification failed:", verifyError.message);
-      return { 
-        success: false, 
-        error: "Email configuration invalid" 
-      };
-    }*/
 
     const mailOptions = {
       from: `CSCQC System <${process.env.EMAIL_USER}>`,
@@ -52,26 +41,28 @@ async function sendEmail({ to, subject, text }) {
       text,
     };
 
-    // Add timeout wrapper
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error("Email send timeout")), 15000); // 15 seconds
-    });
-
-    const sendPromise = transporter.sendMail(mailOptions);
-
-    const info = await Promise.race([sendPromise, timeoutPromise]);
+    console.log("📤 Sending email...");
+    const info = await transporter.sendMail(mailOptions);
     
     console.log("✅ Email sent successfully:", info.messageId);
     return { success: true, info };
 
   } catch (error) {
     console.error("❌ Error sending email:", error.message);
+    console.error("Full error:", error);
     
     // Return specific error messages
     if (error.message.includes("Invalid login")) {
       return { 
         success: false, 
         error: "Invalid email credentials. Check EMAIL_USER and EMAIL_PASS." 
+      };
+    }
+    
+    if (error.message.includes("timeout")) {
+      return { 
+        success: false, 
+        error: "Email server connection timeout. Check your network/firewall." 
       };
     }
     
@@ -83,6 +74,3 @@ async function sendEmail({ to, subject, text }) {
 }
 
 module.exports = sendEmail;
-
-
-
