@@ -1218,7 +1218,7 @@ async function loadCategoryChart() {
 
 
 // Configuration
-const AI_API_BASE = 'http://localhost:3000/api/ai-prescriptions';
+const AI_API_BASE = 'api/ai-prescriptions';
 
 // ========== INITIALIZE AI PRESCRIPTION FEATURE ==========
 document.addEventListener('DOMContentLoaded', () => {
@@ -1886,3 +1886,4 @@ async function loadTopReferral() {
     };
 
 }
+
