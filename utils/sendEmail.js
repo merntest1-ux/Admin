@@ -2,6 +2,11 @@
 const nodemailer = require("nodemailer");
 
 async function sendEmail({ to, subject, text }) {
+
+  console.log("📧 EMAIL_USER:", process.env.EMAIL_USER);
+  console.log("📧 EMAIL_PASS exists:", !!process.env.EMAIL_PASS);
+  console.log("📧 EMAIL_PASS length:", process.env.EMAIL_PASS?.length);
+  
   try {
     // Validate environment variables
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
@@ -78,5 +83,6 @@ async function sendEmail({ to, subject, text }) {
 }
 
 module.exports = sendEmail;
+
 
 
