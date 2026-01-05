@@ -45,11 +45,10 @@ router.post("/create", auth, authorizeRoles("Admin"), async (req, res) => {
       });
     }
 
-    // Let the pre-save hook handle password hashing
     const user = new User({
       username,
       email,
-      password, // Raw password - will be hashed by pre-save hook
+      password,
       fullName,
       role,
       department,
@@ -58,18 +57,27 @@ router.post("/create", auth, authorizeRoles("Admin"), async (req, res) => {
     });
 
     await user.save();
+    console.log("✅ User saved to database:", user._id);
 
-    try {
-      await sendEmail({
-        to: email,
-        subject: "Your Account Has Been Created",
-        text: `Hello ${fullName},\n\nYour account has been created.\nUsername: ${username}\nTemporary Password: ${password}\n\nPlease log in and change your password immediately.\n\nCSCQC Guidance System`,
+    // Send email asynchronously (don't wait for it)
+    // This prevents blocking the response
+    sendEmail({
+      to: email,
+      subject: "Your Account Has Been Created",
+      text: `Hello ${fullName},\n\nYour account has been created.\nUsername: ${username}\nTemporary Password: ${password}\n\nPlease log in and change your password immediately.\n\nCSCQC Guidance System`,
+    })
+      .then(result => {
+        if (result.success) {
+          console.log("✅ Welcome email sent to:", email);
+        } else {
+          console.error("❌ Failed to send welcome email:", result.error);
+        }
+      })
+      .catch(err => {
+        console.error("❌ Email send error:", err.message);
       });
-    } catch (emailErr) {
-      console.error("Email error:", emailErr);
-      return res.status(500).json({ success: true, message: "User created, but failed to send email" });
-    }
 
+    // Respond immediately (don't wait for email)
     res.status(201).json({
       success: true,
       message: "User created successfully. They must change password on first login.",
@@ -84,8 +92,9 @@ router.post("/create", auth, authorizeRoles("Admin"), async (req, res) => {
         },
       },
     });
+
   } catch (error) {
-    console.error("Error creating user:", error);
+    console.error("❌ Error creating user:", error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
