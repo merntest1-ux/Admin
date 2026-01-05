@@ -1,17 +1,20 @@
-// utils/sendEmail.js
 const nodemailer = require("nodemailer");
 
-// Sends an email using Gmail SMTP (or environment SMTP)
 async function sendEmail({ to, subject, text }) {
   try {
     const transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",
-      port: 465,  // ✅ Use port 465 instead of 587
-      secure: true,  // ✅ Must be true for port 465
+      port: 587,
+      secure: false,
+      requireTLS: true,
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
       },
+      tls: {
+        ciphers: 'SSLv3',
+        rejectUnauthorized: false
+      }
     });
 
     const mailOptions = {
