@@ -1,5 +1,7 @@
+// utils/sendEmail.js
 const nodemailer = require("nodemailer");
 
+// Sends an email using Gmail SMTP (or environment SMTP)
 async function sendEmail({ to, subject, text }) {
   try {
     const transporter = nodemailer.createTransport({
@@ -34,4 +36,3 @@ async function sendEmail({ to, subject, text }) {
 }
 
 module.exports = sendEmail;
-
