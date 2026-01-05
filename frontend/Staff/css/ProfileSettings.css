@@ -1,4 +1,4 @@
-/*Teacher/Adviser ProfileSettings.css*/
+/*Staff/Counselor ProfileSettings.css*/
 
 * {
   margin: 0;
@@ -479,4 +479,5 @@ input[readonly]:hover {
 @keyframes backgroundPan {
   from { background-position: 0 0; }
   to { background-position: 100% 100%; }
+
 }
