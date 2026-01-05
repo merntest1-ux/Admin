@@ -1,7 +1,7 @@
 // Dashboard.js - UPDATED STATUS CHART TO LINE GRAPH
 
 document.addEventListener("DOMContentLoaded", async () => {
-  console.log("ðŸŸ¢ Dashboard.js loaded");
+  console.log("🎢 Dashboard.js loaded");
 
   // Highlight active nav item
   const navItems = document.querySelectorAll(".nav-item");
@@ -1884,4 +1884,5 @@ async function loadTopReferral() {
       category: topCategory,
       count: maxCount 
     };
+
 }
