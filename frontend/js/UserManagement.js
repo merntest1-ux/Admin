@@ -270,14 +270,19 @@ function setupFormSubmit() {
           successMessage += " This teacher is now available as an adviser.";
         }
         
-        if (typeof customAlert !== 'undefined') {
-          customAlert.success(successMessage);
-        } else {
-          alert(successMessage);
-        }
-        
+        // Close modal first, then show success message
         closeCreateUserModal();
         form.reset();
+        
+        // Small delay to ensure modal closes before showing alert
+        setTimeout(() => {
+          if (typeof customAlert !== 'undefined') {
+            customAlert.success(successMessage);
+          } else {
+            alert(successMessage);
+          }
+        }, 100);
+        
         await loadUsers();
       } else {
         if (typeof customAlert !== 'undefined') {
@@ -294,8 +299,6 @@ function setupFormSubmit() {
         alert(error.message || "Failed to create user");
       }
     }
-  });
-}
 
 // ========== MODAL FUNCTIONS ==========
 function openCreateUserModal() {
@@ -489,4 +492,5 @@ async function handleDeleteUser(btn, userId) {
       }
     }
   }
+
 }
