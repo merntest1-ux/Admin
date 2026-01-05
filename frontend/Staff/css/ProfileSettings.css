@@ -310,6 +310,7 @@ h2 {
   font-weight: var(--font-weight-bold);
   color: var(--color-primary);
   letter-spacing: -0.02em;
+  margin: 0;
 }
 
 /* User Profile Dropdown */
