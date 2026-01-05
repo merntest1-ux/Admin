@@ -436,6 +436,7 @@ function selectStudent(id, studentId, name, level, grade) {
 }
 
 // Update submission
+// Update submission - FIXED VERSION
 async function updateSubmission(e) {
   e.preventDefault();
   
@@ -451,12 +452,18 @@ async function updateSubmission(e) {
     notes: document.getElementById('view-notes').value.trim() || null
   };
   
-  // Handle category
+  // Handle category - FIXED
   const categorySelect = document.getElementById('view-category');
   if (categorySelect) {
-    const category = categorySelect.value;
+    const category = categorySelect.value.trim();
     
-    if (category && category !== '') {
+    // Only validate and set category if one is selected
+    if (category) {
+      // Reload categories if needed to ensure we have fresh data
+      if (availableCategories.length === 0) {
+        await loadCategories();
+      }
+      
       const categoryExists = availableCategories.some(cat => cat.name === category);
       if (!categoryExists) {
         showAlert('Selected category is not valid. Please select a valid category from the dropdown list.', 'error');
@@ -464,6 +471,7 @@ async function updateSubmission(e) {
       }
       formData.category = category;
     } else {
+      // No category selected - set to null
       formData.category = null;
     }
   }
@@ -478,13 +486,14 @@ async function updateSubmission(e) {
       showAlert('Submission updated successfully', 'success');
       closeViewModal();
       loadSubmissions();
+    } else {
+      showAlert('Failed to update submission: ' + (response.error || response.message || 'Unknown error'), 'error');
     }
   } catch (error) {
     console.error('Failed to update submission:', error);
     showAlert('Failed to update submission: ' + error.message, 'error');
   }
 }
-
 // Delete submission
 async function deleteSubmission(submissionId) {
   if (!confirm('Are you sure you want to delete this submission? This action cannot be undone.')) {
@@ -800,4 +809,5 @@ style.textContent = `
     display: block;
   }
 `;
+
 document.head.appendChild(style);
