@@ -29,7 +29,7 @@ async function sendEmail({ to, subject, text }) {
     });
 
     // Verify transporter configuration (optional, but helpful for debugging)
-    try {
+    /*try {
       await transporter.verify();
       console.log("✅ Email transporter verified");
     } catch (verifyError) {
@@ -38,7 +38,7 @@ async function sendEmail({ to, subject, text }) {
         success: false, 
         error: "Email configuration invalid" 
       };
-    }
+    }*/
 
     const mailOptions = {
       from: `CSCQC System <${process.env.EMAIL_USER}>`,
@@ -78,4 +78,5 @@ async function sendEmail({ to, subject, text }) {
 }
 
 module.exports = sendEmail;
+
 
