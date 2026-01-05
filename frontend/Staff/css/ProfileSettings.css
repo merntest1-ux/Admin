@@ -440,8 +440,8 @@ h2 {
 
 .profile-pic {
   position: relative;
-  width: 96px;
-  height: 96px;
+  width: 120px;
+  height: 120px;
   flex-shrink: 0;
 }
 
@@ -450,20 +450,21 @@ h2 {
   height: 100%;
   border-radius: 50%;
   object-fit: cover;
-  border: 3px solid #10b981;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  border: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .profile-pic > div {
   border: none !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
 }
 
 .status-ring {
   position: absolute;
-  bottom: 2px;
-  right: 2px;
-  width: 20px;
-  height: 20px;
+  bottom: 0;
+  right: 0;
+  width: 24px;
+  height: 24px;
   background: #10b981;
   border: 3px solid var(--color-white);
   border-radius: 50%;
@@ -479,7 +480,8 @@ h2 {
   font-size: var(--font-size-2xl);
   color: var(--color-gray-900);
   font-weight: var(--font-weight-bold);
-  margin-bottom: var(--spacing-xs);
+  margin-bottom: 4px;
+  letter-spacing: -0.01em;
 }
 
 .profile-text p {
