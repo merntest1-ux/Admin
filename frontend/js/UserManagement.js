@@ -1,7 +1,7 @@
 // frontend/js/UserManagement.js - Professional Version
 
 document.addEventListener("DOMContentLoaded", async () => {
-  console.log("🟢 UserManagement.js loaded");
+  console.log("ðŸŸ¢ UserManagement.js loaded");
   
   // Load user profile first
   await loadUserProfile();
@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   setupActionDelegation();
   setupModalHandling();
   
-  console.log("✅ User Management initialized successfully");
+  console.log("âœ… User Management initialized successfully");
 });
 
 // ========== LOAD USER PROFILE ==========
@@ -63,7 +63,7 @@ async function loadUserProfile() {
           background: none;
         `;
         
-        console.log("✅ Avatar created with initials:", initials);
+        console.log("âœ… Avatar created with initials:", initials);
         
         // Hover effect
         profileButton.addEventListener('mouseenter', function() {
@@ -121,7 +121,7 @@ function setupProfileDropdown() {
       e.preventDefault();
       e.stopPropagation();
       profileDropdown.classList.toggle("show");
-      console.log("🔔 Profile dropdown toggled");
+      console.log("ðŸ”” Profile dropdown toggled");
     });
 
     document.addEventListener("click", (event) => {
@@ -163,7 +163,7 @@ function displayUsers(users) {
       <td>${escapeHtml(user.email)}</td>
       <td><span class="badge badge-${(user.role || '').toLowerCase()}">${user.role}</span></td>
       <td>${escapeHtml(user.department || 'N/A')}</td>
-      <td><span class="status-${user.isActive ? 'active' : 'inactive'}">${user.isActive ? '● Active' : '● Inactive'}</span></td>
+      <td><span class="status-${user.isActive ? 'active' : 'inactive'}">${user.isActive ? 'â— Active' : 'â— Inactive'}</span></td>
       <td>${new Date(user.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</td>
       <td style="text-align: center;">
         <button 
@@ -299,6 +299,8 @@ function setupFormSubmit() {
         alert(error.message || "Failed to create user");
       }
     }
+  });
+}
 
 // ========== MODAL FUNCTIONS ==========
 function openCreateUserModal() {
@@ -492,5 +494,4 @@ async function handleDeleteUser(btn, userId) {
       }
     }
   }
-
 }
