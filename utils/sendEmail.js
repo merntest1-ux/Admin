@@ -63,7 +63,7 @@ async function sendEmail({ to, subject, text }) {
     }
 
     const mailOptions = {
-      from: CSCQC System <${process.env.EMAIL_USER}>,
+      from: `CSCQC System <${process.env.EMAIL_USER}>`,
       to,
       subject,
       text,
