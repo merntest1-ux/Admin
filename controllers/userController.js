@@ -3,7 +3,7 @@ const User = require('../models/User');
 const sendEmail = require('../utils/sendEmail');
 
 // SANDBOX MODE - Send test emails to YOUR email only
-const TEST_EMAIL = process.env.TEST_EMAIL || "merntest@gmail.com"; // CHANGE THIS
+const TEST_EMAIL = process.env.TEST_EMAIL || "onboarding@resend.dev"; // CHANGE THIS
 
 // ---------------- Get all users ----------------
 exports.getAllUsers = async (req, res) => {
@@ -151,3 +151,4 @@ exports.deleteUser = async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };
+
