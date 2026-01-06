@@ -432,8 +432,7 @@ p {
   z-index: 1000;
 }
 
-.dropdown.show .dropdown-content,
-#profileDropdown.show {
+.dropdown.show .dropdown-content {
   display: block;
   animation: fadeInDown var(--transition-base);
 }
@@ -842,3 +841,4 @@ a:focus {
 .mb-4 { margin-bottom: var(--spacing-lg); }
 
 .hidden { display: none; }
+
