@@ -567,23 +567,30 @@ body {
 /* ============================================
    USERS TABLE
    ============================================ */
+/* ============================================
+   RESPONSIVE USERS TABLE
+   Replace the existing .users-table styles with these
+   ============================================ */
+
 .users-table {
   background: var(--color-white);
   border-radius: var(--radius-xl);
   overflow: hidden;
   border: 1px solid var(--color-gray-200);
   box-shadow: var(--shadow-md);
+  overflow-x: auto; /* Enable horizontal scroll on small screens */
 }
 
 .users-table table {
   width: 100%;
   border-collapse: collapse;
   table-layout: auto;
+  min-width: 800px; /* Minimum width before horizontal scroll kicks in */
 }
 
 .users-table th {
   background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
-  padding: var(--spacing-md) var(--spacing-sm);
+  padding: var(--spacing-md) var(--spacing-lg);
   text-align: left;
   font-weight: var(--font-weight-bold);
   color: var(--color-white);
@@ -595,15 +602,172 @@ body {
 }
 
 .users-table td {
-  padding: var(--spacing-md) var(--spacing-sm);
+  padding: var(--spacing-md) var(--spacing-lg);
   border-bottom: 1px solid var(--color-gray-200);
   color: var(--color-gray-800);
   font-size: var(--font-size-sm);
+  vertical-align: middle;
 }
 
 .users-table tr:hover {
   background: var(--color-gray-50);
   transition: background-color var(--transition-base);
+}
+
+.users-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Actions column should stay compact */
+.users-table th:last-child,
+.users-table td:last-child {
+  width: 120px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Ensure action buttons stay inline */
+.users-table td:last-child {
+  display: flex;
+  gap: var(--spacing-xs);
+  justify-content: center;
+  align-items: center;
+}
+
+/* ============================================
+   TABLET RESPONSIVE (max-width: 768px)
+   ============================================ */
+@media (max-width: 768px) {
+  .users-table table {
+    min-width: 700px; /* Slightly smaller min-width for tablets */
+  }
+
+  .users-table th,
+  .users-table td {
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: var(--font-size-xs);
+  }
+
+  /* Show horizontal scroll indicator */
+  .users-table {
+    position: relative;
+  }
+
+  .users-table::after {
+    content: '← Scroll to see more →';
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(30, 69, 40, 0.9);
+    color: var(--color-accent);
+    padding: 4px 12px;
+    border-radius: var(--radius-full);
+    font-size: var(--font-size-xs);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity var(--transition-base);
+  }
+
+  .users-table.show-scroll-hint::after {
+    opacity: 1;
+  }
+}
+
+/* ============================================
+   MOBILE RESPONSIVE (max-width: 480px)
+   CARD LAYOUT APPROACH
+   ============================================ */
+@media (max-width: 480px) {
+  /* Hide table headers */
+  .users-table thead {
+    display: none;
+  }
+
+  .users-table table {
+    min-width: unset;
+  }
+
+  /* Convert table to card layout */
+  .users-table tbody {
+    display: block;
+  }
+
+  .users-table tr {
+    display: block;
+    margin-bottom: var(--spacing-md);
+    border: 1px solid var(--color-gray-200);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-md);
+    background: var(--color-white);
+  }
+
+  .users-table tr:hover {
+    background: var(--color-gray-50);
+  }
+
+  .users-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-sm) 0;
+    border-bottom: 1px solid var(--color-gray-100);
+  }
+
+  .users-table td:last-child {
+    border-bottom: none;
+    padding-top: var(--spacing-md);
+    justify-content: flex-end;
+  }
+
+  /* Add labels before each cell */
+  .users-table td::before {
+    content: attr(data-label);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-gray-600);
+    font-size: var(--font-size-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    flex-shrink: 0;
+    margin-right: var(--spacing-md);
+  }
+
+  .users-table td:last-child::before {
+    content: '';
+  }
+
+  /* Badges and status should align right */
+  .badge,
+  .status-active,
+  .status-inactive {
+    margin-left: auto;
+  }
+
+  /* Remove scroll hint on mobile card layout */
+  .users-table::after {
+    display: none;
+  }
+}
+
+/* ============================================
+   SCROLLBAR FOR TABLE
+   ============================================ */
+.users-table::-webkit-scrollbar {
+  height: 8px;
+}
+
+.users-table::-webkit-scrollbar-track {
+  background: var(--color-gray-100);
+  border-radius: var(--radius-sm);
+}
+
+.users-table::-webkit-scrollbar-thumb {
+  background: var(--color-secondary);
+  border-radius: var(--radius-sm);
+}
+
+.users-table::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary);
 }
 
 /* ============================================
@@ -1194,4 +1358,5 @@ body {
 .mb-4 { margin-bottom: var(--spacing-lg); }
 
 .hidden { display: none; }
+
 
