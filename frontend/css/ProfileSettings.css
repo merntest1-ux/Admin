@@ -1,6 +1,6 @@
 /* ============================================
-   PROFILE SETTINGS - HOME COLOR PALETTE
-   Layout from screenshot + Home.css colors
+   PROFILE SETTINGS - STAFF/COUNSELOR
+   Matching Home CSS Design
    ============================================ */
 
 /* ============================================
@@ -398,6 +398,26 @@ p {
   border-radius: 50%;
 }
 
+#profileButton {
+  cursor: pointer;
+  transition: transform var(--transition-base);
+  border: none;
+  outline: none;
+  background: none;
+  padding: 0;
+}
+
+#profileButton:hover {
+  transform: scale(1.05);
+}
+
+#profileButton:focus,
+#profileButton:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 4px;
+  border-radius: 50%;
+}
+
 .dropdown-content {
   display: none;
   position: absolute;
@@ -417,6 +437,20 @@ p {
   animation: fadeInDown var(--transition-base);
 }
 
+#profileDropdown {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 10px);
+  background-color: var(--color-white);
+  min-width: 220px;
+  box-shadow: var(--shadow-xl);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--color-gray-200);
+  z-index: 1000;
+}
+
 @keyframes fadeInDown {
   from {
     opacity: 0;
@@ -428,7 +462,8 @@ p {
   }
 }
 
-.dropdown-content a {
+.dropdown-content a,
+#profileDropdown a {
   display: flex;
   align-items: center;
   gap: var(--spacing-md);
@@ -441,23 +476,27 @@ p {
   border-bottom: 1px solid var(--color-gray-100);
 }
 
-.dropdown-content a:last-child {
+.dropdown-content a:last-child,
+#profileDropdown a:last-child {
   border-bottom: none;
 }
 
-.dropdown-content a:hover {
+.dropdown-content a:hover,
+#profileDropdown a:hover {
   background-color: var(--color-beige-light);
   color: var(--color-primary);
   padding-left: calc(var(--spacing-lg) + 4px);
 }
 
-.dropdown-content a .material-symbols-outlined {
+.dropdown-content a .material-symbols-outlined,
+#profileDropdown a .material-symbols-outlined {
   font-size: 20px;
   color: var(--color-secondary);
   transition: color var(--transition-base);
 }
 
-.dropdown-content a:hover .material-symbols-outlined {
+.dropdown-content a:hover .material-symbols-outlined,
+#profileDropdown a:hover .material-symbols-outlined {
   color: var(--color-primary);
 }
 
