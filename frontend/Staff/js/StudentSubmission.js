@@ -411,7 +411,7 @@ function selectStudent(id, studentId, name, level, grade) {
   showAlert('Student information auto-filled', 'success');
 }
 
-// Update submission
+// Update submission - FIXED VERSION
 async function updateSubmission(e) {
   e.preventDefault();
   
@@ -427,23 +427,41 @@ async function updateSubmission(e) {
     notes: document.getElementById('view-notes').value.trim() || null
   };
   
-  // Handle category
+  // Handle category - FIXED
   const categorySelect = document.getElementById('view-category');
   if (categorySelect) {
     const category = categorySelect.value.trim();
     
+    console.log('📂 Selected category:', category);
+    console.log('📋 Available categories:', availableCategories);
+    
     if (category) {
+      // Reload categories if not loaded
       if (availableCategories.length === 0) {
+        console.log('⚠️ Categories not loaded, loading now...');
         await loadCategories();
       }
       
-      const categoryExists = availableCategories.some(cat => cat.name === category);
+      // Check if category exists (case-insensitive comparison)
+      const categoryExists = availableCategories.some(
+        cat => cat.name.toLowerCase() === category.toLowerCase()
+      );
+      
+      console.log('✅ Category exists:', categoryExists);
+      
       if (!categoryExists) {
         showAlert('Selected category is not valid. Please select a valid category from the dropdown list.', 'error');
+        console.error('❌ Invalid category selected:', category);
         return;
       }
-      formData.category = category;
+      
+      // Use the exact category name from availableCategories (preserves casing)
+      const matchedCategory = availableCategories.find(
+        cat => cat.name.toLowerCase() === category.toLowerCase()
+      );
+      formData.category = matchedCategory.name;
     } else {
+      // If no category selected, set to null
       formData.category = null;
     }
   }
@@ -453,15 +471,18 @@ async function updateSubmission(e) {
     
     const response = await apiClient.updateStudentSubmission(submissionId, formData);
     
+    console.log('📥 Update response:', response);
+    
     if (response.success) {
       showAlert('Submission updated successfully', 'success');
       closeViewModal();
       loadSubmissions();
     } else {
       showAlert('Failed to update submission: ' + (response.error || response.message || 'Unknown error'), 'error');
+      console.error('❌ Update failed:', response);
     }
   } catch (error) {
-    console.error('Failed to update submission:', error);
+    console.error('❌ Failed to update submission:', error);
     showAlert('Failed to update submission: ' + error.message, 'error');
   }
 }
@@ -764,3 +785,4 @@ style.textContent = `
 `;
 
 document.head.appendChild(style);
+
