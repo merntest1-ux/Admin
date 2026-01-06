@@ -1,78 +1,56 @@
-// utils/sendEmail.js - Resend API Only
-const https = require('https');
+const nodemailer = require('nodemailer');
 
-async function sendEmail({ to, subject, text }) {
-  console.log("📧 Sending email via Resend API");
-  
-  // Check if API key is configured
-  if (!process.env.RESEND_API_KEY) {
-    console.error("❌ RESEND_API_KEY not configured");
-    return { 
-      success: false, 
-      error: "RESEND_API_KEY not configured. Please add it to your environment variables." 
+async function sendEmail({ to, subject, text}) {
+  console.log("sending Email via nodemailer");
+
+  if(!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    console.log("EMAIL_USER or EMAIL_PASS not configured");
+
+    return {
+      success: false,
+      error: "Email credentials not configured"
     };
   }
 
-  // Use verified email or Resend's test domain
-  const fromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
-  const fromName = process.env.RESEND_FROM_NAME || "CSCQC System";
+  const fromName = process.env.EMAIL_FROM_NAME || "CSCQC System";
 
-  console.log(`📤 From: ${fromName} <${fromEmail}>`);
-  console.log(`📥 To: ${to}`);
-  console.log(`📋 Subject: ${subject}`);
+  console.log(`From: ${fromName} <${process.env.EMAIL_USER}>`);
+  console.log(`To: ${to}`);
+  console.log(`Subject: ${subject} `);
 
-  const data = JSON.stringify({
-    from: `${fromName} <${fromEmail}>`,
-    to: [to],
-    subject: subject,
-    text: text
-  });
-
-  const options = {
-    hostname: 'api.resend.com',
-    port: 443,
-    path: '/emails',
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
-      'Content-Type': 'application/json',
-      'Content-Length': data.length
-    }
-  };
-
-  return new Promise((resolve) => {
-    const req = https.request(options, (res) => {
-      let responseData = '';
-
-      res.on('data', (chunk) => {
-        responseData += chunk;
-      });
-
-      res.on('end', () => {
-        if (res.statusCode >= 200 && res.statusCode < 300) {
-          console.log("✅ Email sent successfully via Resend");
-          console.log("📬 Response:", responseData);
-          resolve({ success: true, provider: 'resend', data: responseData });
-        } else {
-          console.error("❌ Resend API error:", res.statusCode);
-          console.error("📄 Error details:", responseData);
-          resolve({ 
-            success: false, 
-            error: `Resend API error: ${res.statusCode}`,
-            details: responseData
-          });
-        }
-      });
+  try {
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+      }
     });
 
-    req.on('error', (error) => {
-      console.error("❌ Resend request failed:", error.message);
-      resolve({ success: false, error: error.message });
+    const info = await transporter.sendMail({
+      from: `${fromName} <${process.env.EMAIL_USER}>`,
+      to: to,
+      subject: subject,
+      text: text
     });
 
-    req.write(data);
-    req.end();
-  });
+    console.log("Email sent successfully");
+    console.log("message id: ", info.messageId);
+
+    return {
+      success: true, 
+      provider: 'nodemailer',
+      message: info.messageId
+    };
+  } catch (error) {
+    console.error("nodemailer error", error.message);
+
+    return {
+      success: false,
+      error: error.message,
+      details: error.toString()
+    };
+  }
 }
 
 module.exports = sendEmail;
