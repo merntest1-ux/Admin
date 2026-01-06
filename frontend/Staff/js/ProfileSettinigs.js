@@ -236,3 +236,21 @@ document.addEventListener("DOMContentLoaded", async () => {
   // --------------------------
   loadUserProfile();
 });
+
+// Dropdown toggle
+document.querySelector('.profile-image')?.addEventListener('click', function(e) {
+  e.stopPropagation();
+  document.querySelector('.dropdown')?.classList.toggle('show');
+});
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function() {
+  document.querySelector('.dropdown')?.classList.remove('show');
+});
+
+// Add tooltips to nav items (for icon-only mode)
+document.querySelectorAll('.nav-item').forEach(item => {
+  const title = item.querySelector('.nav-title')?.textContent;
+  if (title) item.setAttribute('data-tooltip', title);
+});
+
