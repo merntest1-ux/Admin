@@ -3,6 +3,26 @@ const nodemailer = require("nodemailer");
 
 async function sendEmail({ to, subject, text }) {
   try {
+    // ==================== ADD THIS SECTION - START ====================
+    // Render Environment Check - Add this at the very beginning
+    console.log("🔍 ========== RENDER ENVIRONMENT CHECK ==========");
+    console.log("EMAIL_USER exists:", !!process.env.EMAIL_USER);
+    console.log("EMAIL_PASS exists:", !!process.env.EMAIL_PASS);
+    console.log("SMTP_HOST:", process.env.SMTP_HOST || "NOT SET - using default");
+    console.log("SMTP_PORT:", process.env.SMTP_PORT || "NOT SET - using default");
+    
+    // Show partial values (safe for logs, won't expose full credentials)
+    if (process.env.EMAIL_USER) {
+      console.log("EMAIL_USER preview:", process.env.EMAIL_USER.substring(0, 5) + "...");
+      console.log("EMAIL_USER full length:", process.env.EMAIL_USER.length);
+    }
+    if (process.env.EMAIL_PASS) {
+      console.log("EMAIL_PASS length:", process.env.EMAIL_PASS.length);
+      console.log("EMAIL_PASS preview:", process.env.EMAIL_PASS.substring(0, 4) + "...");
+    }
+    console.log("🔍 ===============================================");
+    // ==================== ADD THIS SECTION - END ====================
+
     // Validate environment variables
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
       console.error("❌ Email credentials not configured");
@@ -128,4 +148,3 @@ async function sendEmail({ to, subject, text }) {
 }
 
 module.exports = sendEmail;
-
