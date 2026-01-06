@@ -112,26 +112,39 @@ async function loadUserProfile() {
 // ====================================
 async function loadCategories() {
   try {
+    console.log('🔄 Loading categories...');
     const response = await apiClient.getCategories();
+    
+    console.log('📦 Categories API response:', response);
     
     if (response.success) {
       const categories = response.data || response.categories || [];
       availableCategories = categories;
+      console.log('✅ Categories loaded:', availableCategories);
       populateCategoryDropdown(categories);
+      return true;
     } else {
-      console.error('Failed to load categories:', response.error);
+      console.error('❌ Failed to load categories:', response.error);
       availableCategories = [];
+      return false;
     }
   } catch (error) {
-    console.error('Error loading categories:', error);
+    console.error('❌ Error loading categories:', error);
     availableCategories = [];
+    return false;
   }
 }
 
 function populateCategoryDropdown(categories) {
   const categorySelect = document.getElementById('view-category');
   
-  if (!categorySelect) return;
+  if (!categorySelect) {
+    console.warn('⚠️ Category dropdown not found');
+    return;
+  }
+  
+  // Store current value to restore after repopulating
+  const currentValue = categorySelect.value;
   
   categorySelect.innerHTML = '<option value="">Select Category (Optional)</option>';
   
@@ -142,6 +155,14 @@ function populateCategoryDropdown(categories) {
       option.textContent = category.name;
       categorySelect.appendChild(option);
     });
+    console.log('✅ Dropdown populated with', categories.length, 'categories');
+    
+    // Restore previous value if it exists
+    if (currentValue && categories.some(cat => cat.name === currentValue)) {
+      categorySelect.value = currentValue;
+    }
+  } else {
+    console.warn('⚠️ No categories to populate');
   }
 }
 
@@ -273,6 +294,12 @@ async function viewSubmission(submissionId) {
   try {
     console.log('📋 Fetching submission details:', submissionId);
     
+    // Ensure categories are loaded FIRST
+    if (availableCategories.length === 0) {
+      console.log('⚠️ Categories not loaded yet, loading now...');
+      await loadCategories();
+    }
+    
     const response = await apiClient.getStudentSubmission(submissionId);
     
     console.log('📥 Submission details received:', response);
@@ -292,18 +319,21 @@ async function viewSubmission(submissionId) {
       document.getElementById('view-date').value = new Date(submission.createdAt).toISOString().split('T')[0];
       document.getElementById('view-notes').value = submission.notes || '';
       
-      // Handle category - FIXED to check dropdown options
+      // Handle category - IMPROVED
       const categorySelect = document.getElementById('view-category');
       if (categorySelect) {
         const submissionCategory = submission.category || '';
         
+        // Remove existing warning
         const categoryContainer = categorySelect.parentElement;
         const existingWarning = categoryContainer.querySelector('.category-warning');
         if (existingWarning) {
           existingWarning.remove();
         }
         
-        // Try to set the value directly first
+        console.log('📂 Setting category to:', submissionCategory);
+        console.log('📋 Available options:', Array.from(categorySelect.options).map(o => o.value));
+        
         if (submissionCategory) {
           // Check if option exists in dropdown
           const optionExists = Array.from(categorySelect.options).some(
@@ -312,7 +342,7 @@ async function viewSubmission(submissionId) {
           
           if (optionExists) {
             categorySelect.value = submissionCategory;
-            console.log('✅ Category set to:', submissionCategory);
+            console.log('✅ Category set successfully:', submissionCategory);
           } else {
             // Option doesn't exist - show warning
             categorySelect.value = '';
@@ -325,6 +355,7 @@ async function viewSubmission(submissionId) {
           }
         } else {
           categorySelect.value = '';
+          console.log('ℹ️ No category set for this submission');
         }
       }
       
@@ -333,7 +364,7 @@ async function viewSubmission(submissionId) {
       initStudentIdAutocomplete();
     }
   } catch (error) {
-    console.error('Failed to load submission details:', error);
+    console.error('❌ Failed to load submission details:', error);
     showAlert('Failed to load submission details: ' + error.message, 'error');
   }
 }
@@ -415,8 +446,12 @@ function selectStudent(id, studentId, name, level, grade) {
 async function updateSubmission(e) {
   e.preventDefault();
   
-  const submissionId = document.getElementById('viewSubmissionId').value;
+  console.log('🚀 Starting submission update...');
   
+  const submissionId = document.getElementById('viewSubmissionId').value;
+  console.log('📝 Submission ID:', submissionId);
+  
+  // Build form data
   const formData = {
     studentId: document.getElementById('view-studentId').value.trim() || null,
     studentName: document.getElementById('view-studentName').value.trim(),
@@ -427,63 +462,50 @@ async function updateSubmission(e) {
     notes: document.getElementById('view-notes').value.trim() || null
   };
   
-  // Handle category - FIXED
+  // Handle category - SIMPLIFIED AND FIXED
   const categorySelect = document.getElementById('view-category');
   if (categorySelect) {
-    const category = categorySelect.value.trim();
+    const selectedCategory = categorySelect.value.trim();
     
-    console.log('📂 Selected category:', category);
-    console.log('📋 Available categories:', availableCategories);
+    console.log('📂 Category dropdown value:', selectedCategory);
+    console.log('📂 Category dropdown selectedIndex:', categorySelect.selectedIndex);
+    console.log('📂 Category dropdown options:', Array.from(categorySelect.options).map(o => ({ value: o.value, text: o.text })));
     
-    if (category) {
-      // Reload categories if not loaded
-      if (availableCategories.length === 0) {
-        console.log('⚠️ Categories not loaded, loading now...');
-        await loadCategories();
-      }
-      
-      // Check if category exists (case-insensitive comparison)
-      const categoryExists = availableCategories.some(
-        cat => cat.name.toLowerCase() === category.toLowerCase()
-      );
-      
-      console.log('✅ Category exists:', categoryExists);
-      
-      if (!categoryExists) {
-        showAlert('Selected category is not valid. Please select a valid category from the dropdown list.', 'error');
-        console.error('❌ Invalid category selected:', category);
-        return;
-      }
-      
-      // Use the exact category name from availableCategories (preserves casing)
-      const matchedCategory = availableCategories.find(
-        cat => cat.name.toLowerCase() === category.toLowerCase()
-      );
-      formData.category = matchedCategory.name;
+    if (selectedCategory) {
+      // If a category is selected, just use it
+      // Remove validation - let the backend handle it
+      formData.category = selectedCategory;
+      console.log('✅ Category will be sent:', selectedCategory);
     } else {
-      // If no category selected, set to null
+      // No category selected - send null or empty string
       formData.category = null;
+      console.log('ℹ️ No category selected, sending null');
     }
   }
   
+  console.log('📤 Final form data to send:', formData);
+  
   try {
-    console.log('✏️ Updating submission:', submissionId, 'with data:', formData);
-    
     const response = await apiClient.updateStudentSubmission(submissionId, formData);
     
-    console.log('📥 Update response:', response);
+    console.log('📥 Server response:', response);
     
     if (response.success) {
       showAlert('Submission updated successfully', 'success');
       closeViewModal();
-      loadSubmissions();
+      
+      // Reload the table after a short delay to ensure server has processed
+      setTimeout(() => {
+        loadSubmissions();
+      }, 500);
     } else {
-      showAlert('Failed to update submission: ' + (response.error || response.message || 'Unknown error'), 'error');
+      const errorMsg = response.error || response.message || 'Unknown error';
+      showAlert('Failed to update submission: ' + errorMsg, 'error');
       console.error('❌ Update failed:', response);
     }
   } catch (error) {
-    console.error('❌ Failed to update submission:', error);
-    showAlert('Failed to update submission: ' + error.message, 'error');
+    console.error('❌ Update submission error:', error);
+    showAlert('Network error: ' + error.message, 'error');
   }
 }
 
@@ -785,4 +807,5 @@ style.textContent = `
 `;
 
 document.head.appendChild(style);
+
 
