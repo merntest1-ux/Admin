@@ -1,16 +1,16 @@
-// utils/sendEmail.js - Brevo API version (no SMTP, uses HTTPS)
+// utils/sendEmail.js - Multi-provider support (Resend, SendGrid, Brevo, SMTP)
 const https = require('https');
 
 async function sendEmail({ to, subject, text }) {
   try {
-    // Check if using Brevo API or SMTP
-    const useBrevoAPI = process.env.BREVO_API_KEY;
-    
-    if (useBrevoAPI) {
-      // Use Brevo API (recommended for Render)
+    // Priority: Resend > SendGrid > Brevo > SMTP
+    if (process.env.RESEND_API_KEY) {
+      return await sendViaResend({ to, subject, text });
+    } else if (process.env.SENDGRID_API_KEY) {
+      return await sendViaSendGrid({ to, subject, text });
+    } else if (process.env.BREVO_API_KEY) {
       return await sendViaBrevoAPI({ to, subject, text });
     } else {
-      // Fall back to SMTP
       return await sendViaSMTP({ to, subject, text });
     }
   } catch (error) {
@@ -19,7 +19,153 @@ async function sendEmail({ to, subject, text }) {
   }
 }
 
-// Brevo API Method (Works on Render - uses HTTPS)
+// Resend API Method (Recommended - easiest and most reliable)
+async function sendViaResend({ to, subject, text }) {
+  console.log("📧 Using Resend API (HTTPS)");
+  
+  if (!process.env.RESEND_API_KEY) {
+    return { 
+      success: false, 
+      error: "RESEND_API_KEY not configured" 
+    };
+  }
+
+  // Use verified email or Resend's test domain
+  const fromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
+  const fromName = process.env.RESEND_FROM_NAME || "CSCQC System";
+
+  const data = JSON.stringify({
+    from: `${fromName} <${fromEmail}>`,
+    to: [to],
+    subject: subject,
+    text: text
+  });
+
+  const options = {
+    hostname: 'api.resend.com',
+    port: 443,
+    path: '/emails',
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+      'Content-Type': 'application/json',
+      'Content-Length': data.length
+    }
+  };
+
+  return new Promise((resolve) => {
+    const req = https.request(options, (res) => {
+      let responseData = '';
+
+      res.on('data', (chunk) => {
+        responseData += chunk;
+      });
+
+      res.on('end', () => {
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          console.log("✅ Email sent via Resend");
+          console.log("📬 Response:", responseData);
+          resolve({ success: true, provider: 'resend' });
+        } else {
+          console.error("❌ Resend error:", res.statusCode, responseData);
+          resolve({ 
+            success: false, 
+            error: `Resend error: ${res.statusCode}`,
+            details: responseData
+          });
+        }
+      });
+    });
+
+    req.on('error', (error) => {
+      console.error("❌ Resend request failed:", error);
+      resolve({ success: false, error: error.message });
+    });
+
+    req.write(data);
+    req.end();
+  });
+}
+
+// SendGrid API Method
+async function sendViaSendGrid({ to, subject, text }) {
+  console.log("📧 Using SendGrid API (HTTPS)");
+  
+  if (!process.env.SENDGRID_API_KEY) {
+    return { 
+      success: false, 
+      error: "SENDGRID_API_KEY not configured" 
+    };
+  }
+
+  const fromEmail = process.env.SENDGRID_FROM_EMAIL || process.env.EMAIL_USER || "noreply@yourdomain.com";
+  const fromName = process.env.SENDGRID_FROM_NAME || "CSCQC System";
+
+  const data = JSON.stringify({
+    personalizations: [
+      {
+        to: [{ email: to }],
+        subject: subject
+      }
+    ],
+    from: {
+      email: fromEmail,
+      name: fromName
+    },
+    content: [
+      {
+        type: "text/plain",
+        value: text
+      }
+    ]
+  });
+
+  const options = {
+    hostname: 'api.sendgrid.com',
+    port: 443,
+    path: '/v3/mail/send',
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${process.env.SENDGRID_API_KEY}`,
+      'Content-Type': 'application/json',
+      'Content-Length': data.length
+    }
+  };
+
+  return new Promise((resolve) => {
+    const req = https.request(options, (res) => {
+      let responseData = '';
+
+      res.on('data', (chunk) => {
+        responseData += chunk;
+      });
+
+      res.on('end', () => {
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          console.log("✅ Email sent via SendGrid");
+          resolve({ success: true, provider: 'sendgrid' });
+        } else {
+          console.error("❌ SendGrid error:", res.statusCode, responseData);
+          resolve({ 
+            success: false, 
+            error: `SendGrid error: ${res.statusCode}`,
+            details: responseData
+          });
+        }
+      });
+    });
+
+    req.on('error', (error) => {
+      console.error("❌ SendGrid request failed:", error);
+      resolve({ success: false, error: error.message });
+    });
+
+    req.write(data);
+    req.end();
+  });
+}
+
+// Brevo API Method
 async function sendViaBrevoAPI({ to, subject, text }) {
   console.log("📧 Using Brevo API (HTTPS)");
   
@@ -53,7 +199,7 @@ async function sendViaBrevoAPI({ to, subject, text }) {
     }
   };
 
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const req = https.request(options, (res) => {
       let responseData = '';
 
@@ -64,8 +210,7 @@ async function sendViaBrevoAPI({ to, subject, text }) {
       res.on('end', () => {
         if (res.statusCode >= 200 && res.statusCode < 300) {
           console.log("✅ Email sent via Brevo API");
-          console.log("Response:", responseData);
-          resolve({ success: true, response: responseData });
+          resolve({ success: true, provider: 'brevo' });
         } else {
           console.error("❌ Brevo API error:", res.statusCode, responseData);
           resolve({ 
@@ -106,7 +251,6 @@ async function sendViaSMTP({ to, subject, text }) {
 
   console.log("📧 SMTP HOST:", smtpHost);
   console.log("📧 SMTP PORT:", smtpPort);
-  console.log("📧 EMAIL_USER:", process.env.EMAIL_USER);
 
   const transporter = nodemailer.createTransport({
     host: smtpHost,
@@ -127,34 +271,16 @@ async function sendViaSMTP({ to, subject, text }) {
   });
 
   try {
-    console.log("🔍 Verifying SMTP connection...");
-    await transporter.verify();
-    console.log("✅ SMTP connection verified");
-  } catch (verifyError) {
-    console.error("❌ SMTP verification failed:", verifyError.message);
-  }
-
-  const mailOptions = {
-    from: `CSCQC System <${process.env.EMAIL_USER}>`,
-    to,
-    subject,
-    text,
-  };
-
-  try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log("✅ Email sent via SMTP:", info.messageId);
-    return { success: true, info };
+    const info = await transporter.sendMail({
+      from: `CSCQC System <${process.env.EMAIL_USER}>`,
+      to,
+      subject,
+      text,
+    });
+    console.log("✅ Email sent via SMTP");
+    return { success: true, provider: 'smtp', info };
   } catch (error) {
-    console.error("❌ SMTP send failed:", error.message);
-    
-    if (error.message.includes("timeout")) {
-      return { 
-        success: false, 
-        error: "SMTP timeout. Try using BREVO_API_KEY instead of SMTP." 
-      };
-    }
-    
+    console.error("❌ SMTP failed:", error.message);
     return { success: false, error: error.message };
   }
 }
