@@ -47,7 +47,7 @@ exports.createUser = async (req, res) => {
     // Send email with temporary password
     console.log('📧 Attempting to send welcome email...');
     const emailResult = await sendEmail({
-      to: process.env.TEST_EMAIL,
+      to: email,
       subject: 'Your Account Has Been Created',
       text: `Hello ${fullName},\n\nYour account has been created.\nUsername: ${username}\nTemporary Password: ${password}\n\nPlease log in and change your password immediately.\n\nCSCQC Guidance System`
     });
@@ -151,5 +151,6 @@ exports.deleteUser = async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };
+
 
 
