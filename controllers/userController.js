@@ -2,6 +2,9 @@
 const User = require('../models/User');
 const sendEmail = require('../utils/sendEmail');
 
+// SANDBOX MODE - Send test emails to YOUR email only
+const TEST_EMAIL = process.env.TEST_EMAIL || "your-email@gmail.com"; // CHANGE THIS
+
 // ---------------- Get all users ----------------
 exports.getAllUsers = async (req, res) => {
   try {
@@ -44,7 +47,7 @@ exports.createUser = async (req, res) => {
     // Send email with temporary password
     console.log('📧 Attempting to send welcome email...');
     const emailResult = await sendEmail({
-      to: email,
+      to: TEST_EMAIL,  // 🔧 CHANGED: Send to your email for testing
       subject: 'Your Account Has Been Created',
       text: `Hello ${fullName},\n\nYour account has been created.\nUsername: ${username}\nTemporary Password: ${password}\n\nPlease log in and change your password immediately.\n\nCSCQC Guidance System`
     });
@@ -112,7 +115,7 @@ exports.resetPassword = async (req, res) => {
     console.log('📧 Attempting to send password reset email...');
 
     const emailResult = await sendEmail({
-      to: user.email,
+      to: TEST_EMAIL,  // 🔧 CHANGED: Send to your email for testing
       subject: 'Your Password Has Been Reset',
       text: `Hello ${user.fullName},\n\nYour password has been reset.\nTemporary Password: ${newPassword}\n\nPlease log in and change your password immediately.\n\nCSCQC Guidance System`
     });
