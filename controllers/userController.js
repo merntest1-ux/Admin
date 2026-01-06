@@ -21,10 +21,10 @@ exports.createUser = async (req, res) => {
     console.log('📝 Creating user with email:', email);
 
     // Check duplicates case-insensitively
-    const existingEmail = await User.findOne({ email: { $regex: ^${email}$, $options: 'i' } });
+    const existingEmail = await User.findOne({ email: { $regex: `^${email}$`, $options: 'i' } });
     if (existingEmail) return res.status(400).json({ success: false, message: 'Email already exists' });
 
-    const existingUsername = await User.findOne({ username: { $regex: ^${username}$, $options: 'i' } });
+    const existingUsername = await User.findOne({ username: { $regex: `^${username}$`, $options: 'i' } });
     if (existingUsername) return res.status(400).json({ success: false, message: 'Username already exists' });
 
     const newUser = new User({
@@ -46,7 +46,7 @@ exports.createUser = async (req, res) => {
     const emailResult = await sendEmail({
       to: email,
       subject: 'Your Account Has Been Created',
-      text: Hello ${fullName},\n\nYour account has been created.\nUsername: ${username}\nTemporary Password: ${password}\n\nPlease log in and change your password immediately.\n\nCSCQC Guidance System
+      text: `Hello ${fullName},\n\nYour account has been created.\nUsername: ${username}\nTemporary Password: ${password}\n\nPlease log in and change your password immediately.\n\nCSCQC Guidance System`
     });
 
     console.log('📧 Email result:', JSON.stringify(emailResult, null, 2));
@@ -84,7 +84,7 @@ exports.toggleStatus = async (req, res) => {
 
     user.isActive = !user.isActive;
     await user.save();
-    res.json({ success: true, message: User ${user.isActive ? 'activated' : 'deactivated'}, data: user });
+    res.json({ success: true, message: `User ${user.isActive ? 'activated' : 'deactivated'}`, data: user });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: 'Server error' });
@@ -107,14 +107,14 @@ exports.resetPassword = async (req, res) => {
     user.password = newPassword; // hashed by pre-save hook
     user.requirePasswordChange = true;
     await user.save();
-
+    
     console.log('✅ Password reset in database');
     console.log('📧 Attempting to send password reset email...');
 
     const emailResult = await sendEmail({
       to: user.email,
       subject: 'Your Password Has Been Reset',
-      text: Hello ${user.fullName},\n\nYour password has been reset.\nTemporary Password: ${newPassword}\n\nPlease log in and change your password immediately.\n\nCSCQC Guidance System
+      text: `Hello ${user.fullName},\n\nYour password has been reset.\nTemporary Password: ${newPassword}\n\nPlease log in and change your password immediately.\n\nCSCQC Guidance System`
     });
 
     console.log('📧 Email result:', JSON.stringify(emailResult, null, 2));
