@@ -315,22 +315,30 @@ async function viewSubmission(submissionId) {
           existingWarning.remove();
         }
         
-        const categoryExists = availableCategories.some(
-          cat => cat.name === submissionCategory
-        );
-        
-        if (categoryExists && submissionCategory) {
-          categorySelect.value = submissionCategory;
-        } else {
-          categorySelect.value = '';
-          if (submissionCategory) {
+        // Try to set the value directly first
+        if (submissionCategory) {
+          // Check if option exists in dropdown
+          const optionExists = Array.from(categorySelect.options).some(
+            option => option.value === submissionCategory
+          );
+          
+          if (optionExists) {
+            categorySelect.value = submissionCategory;
+            console.log('✅ Category set to:', submissionCategory);
+          } else {
+            // Option doesn't exist - show warning
+            categorySelect.value = '';
             const warningDiv = document.createElement('div');
             warningDiv.className = 'category-warning';
             warningDiv.style.cssText = 'color: #f59e0b; font-size: 12px; margin-top: 4px;';
-            warningDiv.innerHTML = `⚠️ Previous category "${submissionCategory}" no longer exists. You can leave this empty or select a new category.`;
+            warningDiv.innerHTML = `⚠️ Previous category "${submissionCategory}" no longer exists. Please select a new category.`;
             categoryContainer.appendChild(warningDiv);
+            console.warn('⚠️ Category not found in dropdown:', submissionCategory);
           }
+        } else {
+          categorySelect.value = '';
         }
+      }
       }
       
       // Show edit badges for editable fields
@@ -811,3 +819,4 @@ style.textContent = `
 `;
 
 document.head.appendChild(style);
+
