@@ -115,7 +115,7 @@ async function sendEmail({ to, subject, text }) {
     if (error.code === 'ENOTFOUND') {
       return {
         success: false,
-        error: SMTP host not found: ${error.hostname}. Check SMTP_HOST setting.
+        error: `SMTP host not found: ${error.hostname}. Check SMTP_HOST setting.`
       };
     }
     
@@ -128,3 +128,4 @@ async function sendEmail({ to, subject, text }) {
 }
 
 module.exports = sendEmail;
+
