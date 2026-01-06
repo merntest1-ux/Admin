@@ -18,11 +18,13 @@ exports.createUser = async (req, res) => {
   try {
     const { fullName, username, email, role, department, password, requirePasswordChange } = req.body;
 
+    console.log('📝 Creating user with email:', email);
+
     // Check duplicates case-insensitively
-    const existingEmail = await User.findOne({ email: { $regex: `^${email}$`, $options: 'i' } });
+    const existingEmail = await User.findOne({ email: { $regex: ^${email}$, $options: 'i' } });
     if (existingEmail) return res.status(400).json({ success: false, message: 'Email already exists' });
 
-    const existingUsername = await User.findOne({ username: { $regex: `^${username}$`, $options: 'i' } });
+    const existingUsername = await User.findOne({ username: { $regex: ^${username}$, $options: 'i' } });
     if (existingUsername) return res.status(400).json({ success: false, message: 'Username already exists' });
 
     const newUser = new User({
@@ -37,23 +39,38 @@ exports.createUser = async (req, res) => {
     });
 
     await newUser.save();
+    console.log('✅ User saved to database');
 
     // Send email with temporary password
-    try {
-      await sendEmail({
-        to: email,
-        subject: 'Your Account Has Been Created',
-        text: `Hello ${fullName},\n\nYour account has been created.\nUsername: ${username}\nTemporary Password: ${password}\n\nPlease log in and change your password immediately.\n\nCSCQC Guidance System`
+    console.log('📧 Attempting to send welcome email...');
+    const emailResult = await sendEmail({
+      to: email,
+      subject: 'Your Account Has Been Created',
+      text: Hello ${fullName},\n\nYour account has been created.\nUsername: ${username}\nTemporary Password: ${password}\n\nPlease log in and change your password immediately.\n\nCSCQC Guidance System
+    });
+
+    console.log('📧 Email result:', JSON.stringify(emailResult, null, 2));
+
+    // Check if email was sent successfully
+    if (!emailResult.success) {
+      console.error('❌ Email failed:', emailResult.error);
+      return res.status(201).json({ 
+        success: true, 
+        warning: true,
+        message: 'User created, but failed to send email: ' + emailResult.error, 
+        data: newUser 
       });
-    } catch (emailErr) {
-      console.error('Email error:', emailErr);
-      return res.status(201).json({ success: true, message: 'User created, but failed to send email', data: newUser });
     }
 
-    res.status(201).json({ success: true, message: 'User created successfully', data: newUser });
+    console.log('✅ Welcome email sent successfully');
+    res.status(201).json({ 
+      success: true, 
+      message: 'User created and welcome email sent successfully', 
+      data: newUser 
+    });
 
   } catch (error) {
-    console.error(error);
+    console.error('❌ Error in createUser:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };
@@ -67,7 +84,7 @@ exports.toggleStatus = async (req, res) => {
 
     user.isActive = !user.isActive;
     await user.save();
-    res.json({ success: true, message: `User ${user.isActive ? 'activated' : 'deactivated'}`, data: user });
+    res.json({ success: true, message: User ${user.isActive ? 'activated' : 'deactivated'}, data: user });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: 'Server error' });
@@ -91,20 +108,30 @@ exports.resetPassword = async (req, res) => {
     user.requirePasswordChange = true;
     await user.save();
 
-    try {
-      await sendEmail({
-        to: user.email,
-        subject: 'Your Password Has Been Reset',
-        text: `Hello ${user.fullName},\n\nYour password has been reset.\nTemporary Password: ${newPassword}\n\nPlease log in and change your password immediately.\n\nCSCQC Guidance System`
+    console.log('✅ Password reset in database');
+    console.log('📧 Attempting to send password reset email...');
+
+    const emailResult = await sendEmail({
+      to: user.email,
+      subject: 'Your Password Has Been Reset',
+      text: Hello ${user.fullName},\n\nYour password has been reset.\nTemporary Password: ${newPassword}\n\nPlease log in and change your password immediately.\n\nCSCQC Guidance System
+    });
+
+    console.log('📧 Email result:', JSON.stringify(emailResult, null, 2));
+
+    if (!emailResult.success) {
+      console.error('❌ Email failed:', emailResult.error);
+      return res.json({ 
+        success: true, 
+        warning: true,
+        message: 'Password reset, but failed to send email: ' + emailResult.error
       });
-    } catch (emailErr) {
-      console.error('Email error:', emailErr);
-      return res.status(500).json({ success: true, message: 'Password reset, but failed to send email' });
     }
 
-    res.json({ success: true, message: 'Password reset successfully' });
+    console.log('✅ Password reset email sent successfully');
+    res.json({ success: true, message: 'Password reset and notification email sent successfully' });
   } catch (error) {
-    console.error(error);
+    console.error('❌ Error in resetPassword:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };
