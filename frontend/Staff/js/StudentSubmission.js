@@ -51,11 +51,13 @@ async function loadUserProfile() {
   try {
     const userProfile = await apiClient.getUserProfile();
     if (userProfile.success && userProfile.data) {
+      // Generate avatar for profile button
       const profileButton = document.getElementById("profileButton");
       if (profileButton) {
         const fullName = userProfile.data.fullName || userProfile.data.username || "User";
         const initials = fullName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
         
+        // Apply styling to profile button
         profileButton.style.cssText = `
           width: 40px;
           height: 40px;
@@ -72,7 +74,9 @@ async function loadUserProfile() {
           transition: all 0.3s ease;
         `;
         profileButton.textContent = initials;
+        console.log("✅ Avatar created with initials:", initials);
         
+        // Hover effect
         profileButton.addEventListener('mouseenter', () => {
           profileButton.style.transform = 'scale(1.1)';
           profileButton.style.borderColor = '#10b981';
@@ -85,6 +89,7 @@ async function loadUserProfile() {
     }
   } catch (error) {
     console.error("Error loading user profile:", error);
+    // Set default avatar if profile fails to load
     const profileButton = document.getElementById("profileButton");
     if (profileButton) {
       profileButton.style.cssText = `
@@ -112,39 +117,26 @@ async function loadUserProfile() {
 // ====================================
 async function loadCategories() {
   try {
-    console.log('🔄 Loading categories...');
     const response = await apiClient.getCategories();
-    
-    console.log('📦 Categories API response:', response);
     
     if (response.success) {
       const categories = response.data || response.categories || [];
       availableCategories = categories;
-      console.log('✅ Categories loaded:', availableCategories);
       populateCategoryDropdown(categories);
-      return true;
     } else {
-      console.error('❌ Failed to load categories:', response.error);
+      console.error('Failed to load categories:', response.error);
       availableCategories = [];
-      return false;
     }
   } catch (error) {
-    console.error('❌ Error loading categories:', error);
+    console.error('Error loading categories:', error);
     availableCategories = [];
-    return false;
   }
 }
 
 function populateCategoryDropdown(categories) {
   const categorySelect = document.getElementById('view-category');
   
-  if (!categorySelect) {
-    console.warn('⚠️ Category dropdown not found');
-    return;
-  }
-  
-  // Store current value to restore after repopulating
-  const currentValue = categorySelect.value;
+  if (!categorySelect) return;
   
   categorySelect.innerHTML = '<option value="">Select Category (Optional)</option>';
   
@@ -155,14 +147,6 @@ function populateCategoryDropdown(categories) {
       option.textContent = category.name;
       categorySelect.appendChild(option);
     });
-    console.log('✅ Dropdown populated with', categories.length, 'categories');
-    
-    // Restore previous value if it exists
-    if (currentValue && categories.some(cat => cat.name === currentValue)) {
-      categorySelect.value = currentValue;
-    }
-  } else {
-    console.warn('⚠️ No categories to populate');
   }
 }
 
@@ -170,11 +154,12 @@ function populateCategoryDropdown(categories) {
 // CHECK NO SHOW STATUS
 // ====================================
 
+// Check if submission should be marked as "No Show"
 function isNoShow(submission) {
   const now = new Date();
   const lastUpdateDate = new Date(submission.updatedAt || submission.createdAt);
   const timeSinceUpdate = now - lastUpdateDate;
-  const noShowThreshold = NO_SHOW_DAYS_LIMIT * 24 * 60 * 60 * 1000;
+  const noShowThreshold = NO_SHOW_DAYS_LIMIT * 24 * 60 * 60 * 1000; // 3 days in milliseconds
   
   return timeSinceUpdate > noShowThreshold;
 }
@@ -182,24 +167,21 @@ function isNoShow(submission) {
 // Load all student submissions
 async function loadSubmissions() {
   try {
+    // Show loading indicator
     const tbody = document.getElementById('submissionsTableBody');
-    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;">Loading submissions...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;">Loading submissions...</td></tr>';
     
     const status = document.getElementById('statusFilter')?.value || 'all';
     const severity = document.getElementById('severityFilter')?.value || 'all';
     
+    // Build filters object
     const filters = {};
     if (status !== 'all') filters.status = status;
     if (severity !== 'all') filters.severity = severity;
     
     console.log('📡 Fetching student submissions with filters:', filters);
     
-    if (typeof apiClient === 'undefined') {
-      console.error('❌ apiClient is not defined!');
-      tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; color: #ef4444;">Error: API client not loaded. Please refresh the page.</td></tr>';
-      return;
-    }
-    
+    // Use the API client method specifically for student submissions
     const response = await apiClient.getStudentSubmissions(filters);
     
     console.log('📥 Response received:', response);
@@ -209,19 +191,19 @@ async function loadSubmissions() {
       console.log(`✅ Loaded ${submissions.length} submissions`);
       displaySubmissions(submissions);
     } else {
-      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color: #ef4444;">Failed to load submissions: ${response.error || response.message}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; color: #ef4444;">Failed to load submissions: ${response.error || response.message}</td></tr>`;
       console.error('❌ Failed to load submissions:', response);
       showAlert(`Failed to load submissions: ${response.error || response.message}`, 'error');
     }
   } catch (error) {
     console.error('❌ Error loading submissions:', error);
     const tbody = document.getElementById('submissionsTableBody');
-    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color: #ef4444;">Error loading submissions: ${error.message}</td></tr>`;
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; color: #ef4444;">Error loading submissions. Check console for details.</td></tr>';
     showAlert('Network error: ' + error.message, 'error');
   }
 }
 
-// Display submissions in table
+// Display submissions in table with "No Show" remarks
 function displaySubmissions(submissions) {
   const tbody = document.getElementById('submissionsTableBody');
   
@@ -230,12 +212,18 @@ function displaySubmissions(submissions) {
     return;
   }
   
+  console.log(`Displaying ${submissions.length} submissions`);
+  
   tbody.innerHTML = submissions.map(sub => {
+    // Check if submission should be marked as "No Show"
     const noShow = isNoShow(sub);
+    
+    // Determine remarks display
     const remarksDisplay = noShow 
       ? '<span class="remarks no-show">No Show</span>' 
       : '<span class="remarks">—</span>';
     
+    // Check if status is "Pending" - if so, show blank severity
     const isPending = (sub.status || '').toLowerCase() === 'pending';
     const severityDisplay = isPending 
       ? '<span style="color: #9ca3af;">—</span>' 
@@ -265,7 +253,7 @@ function displaySubmissions(submissions) {
 
 // Search functionality
 function setupSearch() {
-  const searchInput = document.querySelector('input[placeholder*="Search"]');
+  const searchInput = document.getElementById('searchInput');
   if (!searchInput) return;
   
   let debounceTimer;
@@ -280,6 +268,7 @@ function setupSearch() {
   });
 }
 
+// Filter table based on search term
 function filterTable(searchTerm) {
   const rows = document.querySelectorAll('#submissionsTableBody tr');
   
@@ -294,12 +283,7 @@ async function viewSubmission(submissionId) {
   try {
     console.log('📋 Fetching submission details:', submissionId);
     
-    // Ensure categories are loaded FIRST
-    if (availableCategories.length === 0) {
-      console.log('⚠️ Categories not loaded yet, loading now...');
-      await loadCategories();
-    }
-    
+    // Use the API client method
     const response = await apiClient.getStudentSubmission(submissionId);
     
     console.log('📥 Submission details received:', response);
@@ -307,8 +291,43 @@ async function viewSubmission(submissionId) {
     if (response.success) {
       const submission = response.data;
       
+      // Update receipt header with submission details
+      const submissionIdDisplay = document.getElementById('modal-submission-id-display');
+      if (submissionIdDisplay) {
+        submissionIdDisplay.textContent = `#${submission.submissionId || 'N/A'}`;
+      }
+      
+      const dateDisplay = document.getElementById('modal-date-display');
+      if (dateDisplay) {
+        const date = new Date(submission.createdAt);
+        dateDisplay.textContent = `Date: ${date.toLocaleDateString('en-US', { 
+          month: 'long', 
+          day: 'numeric', 
+          year: 'numeric' 
+        })}`;
+      }
+      
+      const timeDisplay = document.getElementById('modal-time-display');
+      if (timeDisplay) {
+        const date = new Date(submission.createdAt);
+        timeDisplay.textContent = `Time: ${date.toLocaleTimeString('en-US', { 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        })}`;
+      }
+      
+      // Check and display No Show alert
+      const noShowAlert = document.getElementById('noShowAlert');
+      if (noShowAlert) {
+        if (isNoShow(submission)) {
+          noShowAlert.style.display = 'flex';
+        } else {
+          noShowAlert.style.display = 'none';
+        }
+      }
+      
+      // Fill in the modal with submission data
       document.getElementById('viewSubmissionId').value = submissionId;
-      document.getElementById('view-submissionId-display').value = submission.submissionId || 'N/A';
       document.getElementById('view-studentId').value = submission.studentId || '';
       document.getElementById('view-studentName').value = submission.studentName || '';
       document.getElementById('view-level').value = submission.level || '';
@@ -319,52 +338,43 @@ async function viewSubmission(submissionId) {
       document.getElementById('view-date').value = new Date(submission.createdAt).toISOString().split('T')[0];
       document.getElementById('view-notes').value = submission.notes || '';
       
-      // Handle category - IMPROVED
+      // Handle category
       const categorySelect = document.getElementById('view-category');
       if (categorySelect) {
         const submissionCategory = submission.category || '';
         
-        // Remove existing warning
-        const categoryContainer = categorySelect.parentElement;
+        const categoryContainer = categorySelect.parentElement.parentElement;
         const existingWarning = categoryContainer.querySelector('.category-warning');
         if (existingWarning) {
           existingWarning.remove();
         }
         
-        console.log('📂 Setting category to:', submissionCategory);
-        console.log('📋 Available options:', Array.from(categorySelect.options).map(o => o.value));
+        const categoryExists = availableCategories.some(
+          cat => cat.name === submissionCategory
+        );
         
-        if (submissionCategory) {
-          // Check if option exists in dropdown
-          const optionExists = Array.from(categorySelect.options).some(
-            option => option.value === submissionCategory
-          );
-          
-          if (optionExists) {
-            categorySelect.value = submissionCategory;
-            console.log('✅ Category set successfully:', submissionCategory);
-          } else {
-            // Option doesn't exist - show warning
-            categorySelect.value = '';
-            const warningDiv = document.createElement('div');
-            warningDiv.className = 'category-warning';
-            warningDiv.style.cssText = 'color: #f59e0b; font-size: 12px; margin-top: 4px; padding: 8px; background-color: #fef3c7; border-radius: 4px; border-left: 3px solid #f59e0b;';
-            warningDiv.innerHTML = `⚠️ Previous category "${submissionCategory}" no longer exists. Please select a new category.`;
-            categoryContainer.appendChild(warningDiv);
-            console.warn('⚠️ Category not found in dropdown:', submissionCategory);
-          }
+        if (categoryExists && submissionCategory) {
+          categorySelect.value = submissionCategory;
         } else {
           categorySelect.value = '';
-          console.log('ℹ️ No category set for this submission');
+          if (submissionCategory) {
+            const warningDiv = document.createElement('div');
+            warningDiv.className = 'category-warning';
+            warningDiv.style.cssText = 'color: #f59e0b; font-size: 12px; margin-top: 8px; padding: 8px; background-color: #fef3c7; border-radius: 4px; border-left: 3px solid #f59e0b;';
+            warningDiv.innerHTML = `⚠️ Previous category "${submissionCategory}" no longer exists. You can leave this empty or select a new category.`;
+            categoryContainer.appendChild(warningDiv);
+          }
         }
       }
       
+      // Show modal
       document.getElementById('viewSubmissionModal').style.display = 'block';
       
+      // Initialize autocomplete for student ID
       initStudentIdAutocomplete();
     }
   } catch (error) {
-    console.error('❌ Failed to load submission details:', error);
+    console.error('Failed to load submission details:', error);
     showAlert('Failed to load submission details: ' + error.message, 'error');
   }
 }
@@ -378,12 +388,14 @@ function initStudentIdAutocomplete() {
   
   let debounceTimer;
   
+  // Remove any existing listeners
   const newInput = studentIdInput.cloneNode(true);
   studentIdInput.parentNode.replaceChild(newInput, studentIdInput);
   
   newInput.addEventListener('input', function() {
     const query = this.value.trim();
     
+    // Clear previous timer
     clearTimeout(debounceTimer);
     
     if (query.length < 2) {
@@ -392,8 +404,10 @@ function initStudentIdAutocomplete() {
       return;
     }
     
+    // Debounce the search
     debounceTimer = setTimeout(async () => {
       try {
+        // Search for students using the API client method
         const response = await apiClient.searchStudents(query);
         
         if (response.success && response.data.length > 0) {
@@ -410,6 +424,7 @@ function initStudentIdAutocomplete() {
     }, 300);
   });
   
+  // Close autocomplete when clicking outside
   document.addEventListener('click', function(e) {
     if (e.target !== newInput) {
       autocompleteList.style.display = 'none';
@@ -417,6 +432,7 @@ function initStudentIdAutocomplete() {
   });
 }
 
+// Display autocomplete results
 function displayAutocompleteResults(students) {
   const autocompleteList = document.getElementById('studentIdAutocomplete');
   
@@ -431,27 +447,27 @@ function displayAutocompleteResults(students) {
   autocompleteList.style.display = 'block';
 }
 
+// Select student from autocomplete
 function selectStudent(id, studentId, name, level, grade) {
+  // Fill in the form fields
   document.getElementById('view-studentId').value = studentId;
   document.getElementById('view-studentName').value = name;
   document.getElementById('view-level').value = level;
   document.getElementById('view-grade').value = grade;
   
+  // Hide autocomplete
   document.getElementById('studentIdAutocomplete').style.display = 'none';
   
+  // Show success message
   showAlert('Student information auto-filled', 'success');
 }
 
-// Update submission - FIXED VERSION
+// Update submission
 async function updateSubmission(e) {
   e.preventDefault();
   
-  console.log('🚀 Starting submission update...');
-  
   const submissionId = document.getElementById('viewSubmissionId').value;
-  console.log('📝 Submission ID:', submissionId);
   
-  // Build form data
   const formData = {
     studentId: document.getElementById('view-studentId').value.trim() || null,
     studentName: document.getElementById('view-studentName').value.trim(),
@@ -462,50 +478,37 @@ async function updateSubmission(e) {
     notes: document.getElementById('view-notes').value.trim() || null
   };
   
-  // Handle category - SIMPLIFIED AND FIXED
+  // Handle category
   const categorySelect = document.getElementById('view-category');
   if (categorySelect) {
-    const selectedCategory = categorySelect.value.trim();
+    const category = categorySelect.value;
     
-    console.log('📂 Category dropdown value:', selectedCategory);
-    console.log('📂 Category dropdown selectedIndex:', categorySelect.selectedIndex);
-    console.log('📂 Category dropdown options:', Array.from(categorySelect.options).map(o => ({ value: o.value, text: o.text })));
-    
-    if (selectedCategory) {
-      // If a category is selected, just use it
-      // Remove validation - let the backend handle it
-      formData.category = selectedCategory;
-      console.log('✅ Category will be sent:', selectedCategory);
+    if (category && category !== '') {
+      const categoryExists = availableCategories.some(cat => cat.name === category);
+      if (!categoryExists) {
+        showAlert('Selected category is not valid. Please select a valid category from the dropdown list.', 'error');
+        return;
+      }
+      formData.category = category;
     } else {
-      // No category selected - send null or empty string
       formData.category = null;
-      console.log('ℹ️ No category selected, sending null');
     }
   }
   
-  console.log('📤 Final form data to send:', formData);
-  
   try {
-    const response = await apiClient.updateStudentSubmission(submissionId, formData);
+    console.log('✏️ Updating submission:', submissionId, 'with data:', formData);
     
-    console.log('📥 Server response:', response);
+    // Use the API client method
+    const response = await apiClient.updateStudentSubmission(submissionId, formData);
     
     if (response.success) {
       showAlert('Submission updated successfully', 'success');
       closeViewModal();
-      
-      // Reload the table after a short delay to ensure server has processed
-      setTimeout(() => {
-        loadSubmissions();
-      }, 500);
-    } else {
-      const errorMsg = response.error || response.message || 'Unknown error';
-      showAlert('Failed to update submission: ' + errorMsg, 'error');
-      console.error('❌ Update failed:', response);
+      loadSubmissions();
     }
   } catch (error) {
-    console.error('❌ Update submission error:', error);
-    showAlert('Network error: ' + error.message, 'error');
+    console.error('Failed to update submission:', error);
+    showAlert('Failed to update submission: ' + error.message, 'error');
   }
 }
 
@@ -518,6 +521,7 @@ async function deleteSubmission(submissionId) {
   try {
     console.log('🗑️ Deleting submission:', submissionId);
     
+    // Use the API client method
     const response = await apiClient.deleteStudentSubmission(submissionId);
     
     if (response.success) {
@@ -538,21 +542,30 @@ function closeViewModal() {
   const autocomplete = document.getElementById('studentIdAutocomplete');
   if (autocomplete) autocomplete.style.display = 'none';
   
+  // Clear category warning if exists
   const categorySelect = document.getElementById('view-category');
   if (categorySelect) {
-    const categoryContainer = categorySelect.parentElement;
+    const categoryContainer = categorySelect.parentElement.parentElement;
     const warningDiv = categoryContainer.querySelector('.category-warning');
     if (warningDiv) {
       warningDiv.remove();
     }
   }
+  
+  // Hide no show alert
+  const noShowAlert = document.getElementById('noShowAlert');
+  if (noShowAlert) {
+    noShowAlert.style.display = 'none';
+  }
 }
 
 // Show alert message
 function showAlert(message, type = 'info') {
+  // Remove any existing alerts
   const existingAlert = document.querySelector('.alert');
   if (existingAlert) existingAlert.remove();
   
+  // Create alert element
   const alert = document.createElement('div');
   alert.className = `alert alert-${type}`;
   alert.textContent = message;
@@ -571,13 +584,17 @@ function showAlert(message, type = 'info') {
   
   document.body.appendChild(alert);
   
+  // Remove after 3 seconds
   setTimeout(() => {
     alert.style.animation = 'slideOut 0.3s ease-out';
     setTimeout(() => alert.remove(), 300);
   }, 3000);
 }
 
-// Apply URL filters on page load
+// ===============================================
+// APPLY URL FILTERS ON PAGE LOAD
+// ===============================================
+
 function applyUrlFiltersForSubmissions() {
   const urlParams = new URLSearchParams(window.location.search);
   
@@ -598,16 +615,20 @@ function applyUrlFiltersForSubmissions() {
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('StudentSubmissions page loaded');
   
+  // Initialize navigation and profile
   initializeNavigation();
   initializeProfileDropdown();
   await loadUserProfile();
   
+  // Load categories first, then submissions
   await loadCategories();
   applyUrlFiltersForSubmissions();
   loadSubmissions();
   
+  // Setup search functionality
   setupSearch();
   
+  // Filter listeners
   const statusFilter = document.getElementById('statusFilter');
   const severityFilter = document.getElementById('severityFilter');
   
@@ -619,16 +640,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     severityFilter.addEventListener('change', loadSubmissions);
   }
   
+  // Form submit listener
   const updateForm = document.getElementById('updateSubmissionForm');
   if (updateForm) {
     updateForm.addEventListener('submit', updateSubmission);
   }
   
+  // Cancel button
   const cancelBtn = document.getElementById('cancelViewModalBtn');
   if (cancelBtn) {
     cancelBtn.addEventListener('click', closeViewModal);
   }
   
+  // Close modal when clicking outside
   window.addEventListener('click', function(e) {
     const modal = document.getElementById('viewSubmissionModal');
     if (e.target === modal) {
@@ -636,6 +660,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
   
+  // Add refresh button functionality if it exists
   const refreshBtn = document.querySelector('[onclick="loadSubmissions()"]');
   if (refreshBtn) {
     refreshBtn.onclick = () => {
@@ -667,6 +692,26 @@ style.textContent = `
     to {
       transform: translateX(400px);
       opacity: 0;
+    }
+  }
+  
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.8;
     }
   }
   
@@ -787,6 +832,7 @@ style.textContent = `
     color: #ef4444;
   }
   
+  /* Remarks Styles */
   .remarks {
     display: inline-block;
     padding: 4px 12px;
@@ -796,16 +842,16 @@ style.textContent = `
     color: #9ca3af;
   }
   
+  /* No Show status - Warning color (yellow/amber) */
   .remarks.no-show {
     background: rgba(251, 191, 36, 0.1);
+    color: #fbbf24;
     font-weight: 600;
   }
   
+  /* Profile Dropdown Styles */
   .dropdown.show .dropdown-content {
     display: block;
   }
 `;
-
 document.head.appendChild(style);
-
-
