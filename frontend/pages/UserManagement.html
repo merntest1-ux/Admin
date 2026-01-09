@@ -140,12 +140,34 @@
 
         <div class="form-group">
           <label for="department">Department *</label>
-          <input type="text" id="department" name="department" required>
+          <select id="department" name="department" required>
+            <option value="">Select Department</option>
+            <!-- Options will be populated dynamically based on role selection -->
+          </select>
         </div>
 
         <div class="form-group">
           <label for="temporaryPassword">Temporary Password *</label>
-          <input type="password" id="temporaryPassword" name="temporaryPassword" required minlength="6">
+          <div style="position: relative;">
+            <input type="password" id="temporaryPassword" name="temporaryPassword" required minlength="6" style="padding-right: 45px;">
+            <button type="button" id="togglePassword" style="
+              position: absolute;
+              right: 10px;
+              top: 50%;
+              transform: translateY(-50%);
+              background: none;
+              border: none;
+              cursor: pointer;
+              padding: 5px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: #666;
+              transition: color 0.3s ease;
+            " title="Toggle password visibility">
+              <span class="material-symbols-outlined" style="font-size: 20px;">visibility</span>
+            </button>
+          </div>
         </div>
 
         <div class="form-actions">
