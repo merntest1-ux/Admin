@@ -113,83 +113,126 @@
     </section>
   </main>
 
-  <!-- View/Update Submission Modal -->
-  <div id="viewSubmissionModal" class="modal">
-    <div class="modal-content" style="max-width: 800px;">
-      <div class="modal-header">
-        <h2>
+ <!-- View/Update Submission Modal - Receipt Style -->
+<div id="viewSubmissionModal" class="modal">
+  <div class="modal-content" style="max-width: 800px;">
+    <!-- Receipt Header -->
+    <div class="modal-header receipt-header">
+      <div class="receipt-header-content">
+        <div class="receipt-title">
           <span class="material-symbols-outlined">assignment</span>
-          Submission Details
-        </h2>
-        <span class="close" onclick="closeViewModal()">&times;</span>
+          <h2>Submission Details</h2>
+        </div>
+        <div class="receipt-id-badge" id="modal-submission-id-display">
+          <!-- Submission ID will be inserted here -->
+        </div>
       </div>
-      <div class="modal-body">
-        <form id="updateSubmissionForm">
-          <input type="hidden" id="viewSubmissionId">
-          
-          <!-- Submission Information -->
-          <div class="form-row">
-            <div class="form-group">
-              <label for="view-submissionId-display">Submission ID</label>
-              <input type="text" id="view-submissionId-display" readonly>
+      <div class="receipt-meta">
+        <div class="receipt-meta-item">
+          <span class="material-symbols-outlined">calendar_today</span>
+          <span id="modal-date-display">Date: --</span>
+        </div>
+        <div class="receipt-meta-item">
+          <span class="material-symbols-outlined">schedule</span>
+          <span id="modal-time-display">Time: --</span>
+        </div>
+      </div>
+      <span class="close" onclick="closeViewModal()">&times;</span>
+    </div>
+
+    <!-- Receipt Body -->
+    <div class="modal-body">
+      <form id="updateSubmissionForm">
+        <input type="hidden" id="viewSubmissionId">
+
+        <!-- No Show Alert Section (conditionally displayed) -->
+        <div id="noShowAlert" class="alert-section no-show-alert" style="display: none;">
+          <div class="alert-icon">
+            <span class="material-symbols-outlined">warning</span>
+          </div>
+          <div class="alert-content">
+            <div class="alert-title">No Show Status</div>
+            <div class="alert-message">This submission has not been updated in over 3 days. Please review and update the status.</div>
+          </div>
+        </div>
+
+        <!-- Student Information Section -->
+        <div class="receipt-section">
+          <div class="receipt-section-title">
+            <span class="material-symbols-outlined">person</span>
+            Student Information
+          </div>
+
+          <div class="receipt-field">
+            <div class="receipt-field-label">Student ID</div>
+            <div class="receipt-field-value">
+              <input type="text" id="view-studentId" placeholder="Type to search student ID..." autocomplete="off">
+              <span class="edit-badge">EDITABLE</span>
             </div>
-            <div class="form-group">
-              <label for="view-date">Date Submitted</label>
-              <input type="date" id="view-date" readonly>
+          </div>
+          <div id="studentIdAutocomplete" class="autocomplete-list"></div>
+
+          <div class="receipt-field">
+            <div class="receipt-field-label">Student Name</div>
+            <div class="receipt-field-value">
+              <input type="text" id="view-studentName" placeholder="Student name" readonly>
             </div>
           </div>
 
-          <!-- Student Information -->
-          <div class="form-row">
-            <div class="form-group autocomplete-container">
-              <label for="view-studentId">
-                Student ID 
-                <span id="studentIdEditBadge" class="edit-badge">EDITABLE</span>
-              </label>
-              <input type="text" 
-                     id="view-studentId" 
-                     placeholder="Type to search student ID..."
-                     autocomplete="off">
-              <div id="studentIdAutocomplete" class="autocomplete-list"></div>
-            </div>
-            <div class="form-group">
-              <label for="view-studentName">Student Name</label>
-              <input type="text" id="view-studentName" placeholder="Student name from submission">
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="view-level">
-                Level
-                <span id="levelEditBadge" class="edit-badge">EDITABLE</span>
-              </label>
+          <div class="receipt-field">
+            <div class="receipt-field-label">Level</div>
+            <div class="receipt-field-value">
               <select id="view-level">
                 <option value="">Unknown</option>
                 <option value="Elementary">Elementary</option>
                 <option value="JHS">Junior High School</option>
                 <option value="SHS">Senior High School</option>
               </select>
+              <span class="edit-badge">EDITABLE</span>
             </div>
-            <div class="form-group">
-              <label for="view-grade">
-                Grade
-                <span id="gradeEditBadge" class="edit-badge">EDITABLE</span>
-              </label>
+          </div>
+
+          <div class="receipt-field">
+            <div class="receipt-field-label">Grade</div>
+            <div class="receipt-field-value">
               <input type="text" id="view-grade" placeholder="e.g., Grade 7, Grade 11">
+              <span class="edit-badge">EDITABLE</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Submission Details Section -->
+        <div class="receipt-section">
+          <div class="receipt-section-title">
+            <span class="material-symbols-outlined">description</span>
+            Submission Details
+          </div>
+
+          <div class="receipt-field-full">
+            <div class="receipt-field-label">Student Concern</div>
+            <div class="receipt-field-value">
+              <textarea id="view-concern" rows="5" readonly></textarea>
             </div>
           </div>
 
-          <!-- Concern Details -->
-          <div class="form-group">
-            <label for="view-concern">Student Concern</label>
-            <textarea id="view-concern" rows="4" readonly></textarea>
+          <div class="receipt-field">
+            <div class="receipt-field-label">Date Submitted</div>
+            <div class="receipt-field-value">
+              <input type="date" id="view-date" readonly>
+            </div>
+          </div>
+        </div>
+
+        <!-- Assessment & Status Section (Editable - Highlighted) -->
+        <div class="receipt-section receipt-editable-section">
+          <div class="receipt-section-title">
+            <span class="material-symbols-outlined">assignment_turned_in</span>
+            Assessment & Status
           </div>
 
-          <!-- Editable Fields for Counselor -->
-          <div class="form-row">
-            <div class="form-group">
-              <label for="view-status">Status</label>
+          <div class="receipt-field">
+            <div class="receipt-field-label">Current Status</div>
+            <div class="receipt-field-value">
               <select id="view-status" required>
                 <option value="Pending">Pending</option>
                 <option value="Under Review">Under Review</option>
@@ -197,8 +240,11 @@
                 <option value="Complete">Complete</option>
               </select>
             </div>
-            <div class="form-group">
-              <label for="view-severity">Severity Level</label>
+          </div>
+
+          <div class="receipt-field">
+            <div class="receipt-field-label">Severity Level</div>
+            <div class="receipt-field-value">
               <select id="view-severity" required>
                 <option value="Low">Low</option>
                 <option value="Medium">Medium</option>
@@ -207,32 +253,475 @@
             </div>
           </div>
 
-          <!-- Category Dropdown -->
-          <div class="form-group">
-            <label for="view-category">
+          <div class="receipt-field">
+            <div class="receipt-field-label">
               Category
               <span style="color: #9ca3af; font-weight: normal; font-size: 0.875rem;">(Optional)</span>
-            </label>
-            <select id="view-category">
-              <option value="">Select Category</option>
-              <!-- Options will be populated dynamically by JavaScript -->
-            </select>
+            </div>
+            <div class="receipt-field-value">
+              <select id="view-category">
+                <option value="">Select Category</option>
+                <!-- Options will be populated dynamically by JavaScript -->
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Counselor Notes Section -->
+        <div class="receipt-section receipt-editable-section">
+          <div class="receipt-section-title">
+            <span class="material-symbols-outlined">edit_note</span>
+            Counselor Notes
           </div>
 
-          <!-- Notes Section -->
-          <div class="form-group">
-            <label for="view-notes">Counselor Notes</label>
-            <textarea id="view-notes" rows="4" placeholder="Add notes about this submission..."></textarea>
+          <div class="receipt-field-full">
+            <div class="receipt-field-label">Add or Update Notes</div>
+            <div class="receipt-field-value">
+              <textarea id="view-notes" rows="4" placeholder="Add notes about this submission..."></textarea>
+            </div>
           </div>
+        </div>
+      </form>
+    </div>
 
-          <div class="form-actions">
-            <button type="button" id="cancelViewModalBtn" class="btn-secondary">Cancel</button>
-            <button type="submit" class="btn-primary">Update Submission</button>
-          </div>
-        </form>
+    <!-- Receipt Footer -->
+    <div class="modal-footer">
+      <div class="receipt-footer-note">
+        <span class="material-symbols-outlined">info</span>
+        Changes will be saved to the system
+      </div>
+      <div class="receipt-actions">
+        <button type="button" id="cancelViewModalBtn" class="btn-secondary">Cancel</button>
+        <button type="submit" form="updateSubmissionForm" class="btn-primary">
+          <span class="material-symbols-outlined">save</span>
+          Update Submission
+        </button>
       </div>
     </div>
   </div>
+</div>
+<style>
+  .receipt-header {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+  padding: 24px 32px;
+  border-bottom: 3px solid var(--color-accent);
+  position: relative;
+}
+
+.receipt-header::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--color-accent) 0px,
+    var(--color-accent) 10px,
+    transparent 10px,
+    transparent 20px
+  );
+}
+
+.receipt-header .close {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  color: var(--color-beige);
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1;
+  padding: 0;
+  background: none;
+  border: none;
+  z-index: 10;
+}
+
+.receipt-header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-right: 40px;
+}
+
+.receipt-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.receipt-title h2 {
+  color: var(--color-white);
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+.receipt-title .material-symbols-outlined {
+  font-size: 32px;
+  color: var(--color-accent);
+}
+
+.receipt-id-badge {
+  background: var(--color-accent);
+  color: var(--color-primary);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(252, 243, 141, 0.3);
+}
+
+.receipt-meta {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  color: var(--color-beige-light);
+  font-size: 13px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(252, 243, 141, 0.2);
+}
+
+.receipt-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.receipt-meta-item .material-symbols-outlined {
+  font-size: 18px;
+  color: var(--color-accent);
+}
+
+/* No Show Alert Section */
+.alert-section {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px 20px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  border-left: 4px solid;
+  animation: slideDown 0.3s ease;
+}
+
+.no-show-alert {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%);
+  border-left-color: var(--color-warning);
+}
+
+.alert-icon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-warning);
+  border-radius: 50%;
+  color: white;
+}
+
+.alert-icon .material-symbols-outlined {
+  font-size: 24px;
+}
+
+.alert-content {
+  flex: 1;
+}
+
+.alert-title {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--color-warning);
+  margin-bottom: 4px;
+}
+
+.alert-message {
+  font-size: 13px;
+  color: #92400e;
+  line-height: 1.5;
+}
+
+/* Receipt Section Styling */
+.receipt-section {
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 2px dashed var(--color-gray-200);
+}
+
+.receipt-section:last-of-type {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.receipt-section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  color: var(--color-primary);
+  font-size: 16px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--color-secondary);
+}
+
+.receipt-section-title .material-symbols-outlined {
+  font-size: 24px;
+  color: var(--color-secondary);
+}
+
+/* Receipt Field Styling */
+.receipt-field {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding: 14px;
+  background: var(--color-gray-50);
+  border-radius: 8px;
+  border-left: 3px solid var(--color-beige);
+  transition: all 0.2s ease;
+  align-items: center;
+}
+
+.receipt-field:hover {
+  background: var(--color-beige-light);
+  border-left-color: var(--color-secondary);
+  transform: translateX(4px);
+}
+
+.receipt-field-label {
+  font-weight: 700;
+  color: var(--color-gray-700);
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.receipt-field-value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-gray-800);
+  font-size: 14px;
+}
+
+.receipt-field-value input,
+.receipt-field-value select,
+.receipt-field-value textarea {
+  flex: 1;
+  padding: 10px 14px;
+  border: 2px solid var(--color-gray-300);
+  border-radius: 6px;
+  background: var(--color-white);
+  color: var(--color-gray-800);
+  font-size: 14px;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.receipt-field-value input:focus,
+.receipt-field-value select:focus,
+.receipt-field-value textarea:focus {
+  outline: none;
+  border-color: var(--color-secondary);
+  box-shadow: 0 0 0 3px rgba(98, 138, 107, 0.1);
+}
+
+.receipt-field-value input[readonly],
+.receipt-field-value select[disabled],
+.receipt-field-value textarea[readonly] {
+  background: var(--color-gray-100);
+  border-color: var(--color-gray-200);
+  color: var(--color-gray-600);
+  cursor: not-allowed;
+}
+
+.receipt-field-value select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%231E4528' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 12px;
+  padding-right: 40px;
+}
+
+/* Full Width Fields */
+.receipt-field-full {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding: 16px;
+  background: var(--color-gray-50);
+  border-radius: 8px;
+  border-left: 3px solid var(--color-beige);
+}
+
+.receipt-field-full:hover {
+  background: var(--color-beige-light);
+  border-left-color: var(--color-secondary);
+}
+
+.receipt-field-full .receipt-field-value textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+/* Editable Section Highlight */
+.receipt-editable-section {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(16, 185, 129, 0.02) 100%);
+  border: 2px solid rgba(16, 185, 129, 0.2);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.receipt-editable-section .receipt-section-title {
+  color: var(--color-success);
+  border-bottom-color: var(--color-success);
+}
+
+.receipt-editable-section .receipt-section-title .material-symbols-outlined {
+  color: var(--color-success);
+}
+
+.receipt-editable-section .receipt-field {
+  border-left-color: rgba(16, 185, 129, 0.3);
+}
+
+.receipt-editable-section .receipt-field:hover {
+  border-left-color: var(--color-success);
+}
+
+.receipt-editable-section .receipt-field-full {
+  border-left-color: rgba(16, 185, 129, 0.3);
+}
+
+.receipt-editable-section .receipt-field-full:hover {
+  border-left-color: var(--color-success);
+}
+
+/* Edit Badge */
+.edit-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--color-info) 0%, #2563eb 100%);
+  color: white;
+  font-size: 9px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+  animation: pulse 2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+/* Receipt Footer */
+.modal-footer {
+  padding: 20px 32px;
+  background: var(--color-gray-50);
+  border-top: 2px solid var(--color-gray-200);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.receipt-footer-note {
+  color: var(--color-gray-600);
+  font-size: 12px;
+  font-style: italic;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.receipt-footer-note .material-symbols-outlined {
+  font-size: 16px;
+  color: var(--color-info);
+}
+
+.receipt-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-primary .material-symbols-outlined {
+  font-size: 18px;
+  vertical-align: middle;
+  margin-right: 4px;
+}
+
+/* Autocomplete positioning */
+.receipt-field .autocomplete-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 194px;
+  right: 14px;
+  z-index: 1000;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .receipt-header-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .receipt-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .receipt-field {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  
+  .receipt-field-value {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .receipt-field .autocomplete-list {
+    left: 14px;
+  }
+  
+  .modal-footer {
+    flex-direction: column-reverse;
+    gap: 12px;
+  }
+  
+  .receipt-footer-note {
+    width: 100%;
+    text-align: center;
+  }
+  
+  .receipt-actions {
+    width: 100%;
+    flex-direction: column-reverse;
+  }
+  
+  .receipt-actions button {
+    width: 100%;
+  }
+}
+</style>
   
   <script src="../../api/api-client.js"></script>
   <script src="../js/StudentSubmission.js"></script>
