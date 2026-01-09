@@ -109,8 +109,8 @@ async function loadUserProfile() {
 
 // DOM Elements
 let searchInput, levelFilter, severityFilter, statusFilter, gradeFilter;
-let viewReferralModal, closeViewModalBtn, cancelViewModalBtn;
-let viewAllReferralsModal, allReferralsTable, closeAllRefModalBtn;
+let viewReferralModal, cancelViewModalBtn;
+let viewAllReferralsModal, allReferralsTable;
 let deleteConfirmModal, confirmDeleteBtn, cancelDeleteBtn;
 let referralToDelete = null;
 
@@ -153,6 +153,47 @@ document.addEventListener('DOMContentLoaded', function() {
   setInterval(loadReferrals, 30000);
 });
 
+// Add this function to update receipt header metadata
+function updateReceiptHeader(referral) {
+  // Update Referral ID Badge
+  const referralIdDisplay = document.getElementById('view-referralId-display');
+  if (referralIdDisplay) {
+    referralIdDisplay.textContent = referral.referralId || 'N/A';
+  }
+  
+  // Update Date Display
+  const dateDisplay = document.getElementById('receipt-date-display');
+  if (dateDisplay) {
+    const date = new Date(referral.dateOfInterview || referral.createdAt);
+    if (!isNaN(date.getTime())) {
+      const formattedDate = date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric' 
+      });
+      dateDisplay.textContent = `Date: ${formattedDate}`;
+    } else {
+      dateDisplay.textContent = 'Date: N/A';
+    }
+  }
+  
+  // Update Time Display
+  const timeDisplay = document.getElementById('receipt-time-display');
+  if (timeDisplay) {
+    const date = new Date(referral.createdAt || referral.dateOfInterview);
+    if (!isNaN(date.getTime())) {
+      const formattedTime = date.toLocaleTimeString('en-US', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        hour12: true
+      });
+      timeDisplay.textContent = `Time: ${formattedTime}`;
+    } else {
+      timeDisplay.textContent = 'Time: N/A';
+    }
+  }
+}
+
 // Initialize DOM elements
 function initializeElements() {
   searchInput = document.getElementById('searchInput');
@@ -162,7 +203,6 @@ function initializeElements() {
   gradeFilter = document.getElementById('gradeFilter');
   
   viewReferralModal = document.getElementById('viewReferralModal');
-  closeViewModalBtn = document.getElementById('closeViewModalBtn');
   cancelViewModalBtn = document.getElementById('cancelViewModalBtn');
   
   viewAllReferralsModal = document.getElementById('viewAllReferralsModal');
@@ -210,14 +250,22 @@ function populateGradeFilter(selectedLevel = 'all', currentGradeValue = 'all') {
     gradeFilter.value = 'all';
   }
   
-  console.log(`📋 Grade filter updated for level: ${selectedLevel}, showing grades:`, gradesToShow);
+  console.log(`🔋 Grade filter updated for level: ${selectedLevel}, showing grades:`, gradesToShow);
 }
+
 
 // Setup event listeners
 function setupEventListeners() {
-  if (closeViewModalBtn) {
-    closeViewModalBtn.addEventListener('click', closeViewModal);
-  }
+  // Close button using the close span
+  const closeSpans = document.querySelectorAll('.close');
+  closeSpans.forEach(span => {
+    span.addEventListener('click', function() {
+      const modal = this.closest('.modal');
+      if (modal) {
+        modal.style.display = 'none';
+      }
+    });
+  });
   
   if (cancelViewModalBtn) {
     cancelViewModalBtn.addEventListener('click', closeViewModal);
@@ -288,12 +336,11 @@ function setupEventListeners() {
     });
   }
   
-  // Level change handler for grade options
+  // Level change handler for grade options in modal
   const levelSelect = document.getElementById('view-level');
   if (levelSelect) {
     levelSelect.addEventListener('change', function() {
-      const currentGrade = document.getElementById('view-grade').value;
-      updateViewGradeOptions(this.value, currentGrade);
+      handleLevelChange(this.value);
     });
   }
 }
@@ -364,7 +411,7 @@ function populateCategoryDropdown(selectElement, isFilterDropdown = false) {
   if (isFilterDropdown) {
     selectElement.innerHTML = '<option value="">All Categories</option>';
   } else {
-    selectElement.innerHTML = '<option value="">Select Category (Optional)</option>';
+    selectElement.innerHTML = '<option value="">Select Category</option>';
   }
   
   availableCategories.forEach(category => {
@@ -503,7 +550,7 @@ function renderGroupedReferrals() {
     const showSeverity = latest.status !== 'Pending' && latest.status !== 'Under Review';
     const severityDisplay = showSeverity 
       ? `<span class="severity-badge severity-${latest.severity.toLowerCase()}">${latest.severity}</span>`
-      : '<span style="color: #6b7280; font-style: italic;">—</span>';
+      : '<span style="color: #6b7280; font-style: italic;">–</span>';
     
     // Escape single quotes in student name for onclick handler
     const escapedName = student.studentName.replace(/'/g, "\\'");
@@ -565,7 +612,7 @@ function viewAllReferralsForStudent(studentId, studentName) {
       const showSeverity = ref.status !== 'Pending' && ref.status !== 'Under Review';
       const severityDisplay = showSeverity 
         ? `<span class="severity-badge severity-${ref.severity.toLowerCase()}">${escapeHtml(ref.severity)}</span>`
-        : '<span style="color: #6b7280; font-style: italic;">—</span>';
+        : '<span style="color: #6b7280; font-style: italic;">–</span>';
       
       return `
       <tr>
@@ -616,15 +663,19 @@ async function viewReferral(referralId) {
       
       console.log('📋 Full referral data:', referral);
       
+      // UPDATE RECEIPT HEADER
+      updateReceiptHeader(referral);
+      
       // Populate form fields
       setInputValue('viewReferralId', referral._id);
-      setInputValue('view-referralId-display', referral.referralId || 'N/A');
       setInputValue('view-studentId', referral.studentId || '');
       setInputValue('view-studentName', referral.studentName || '');
       setInputValue('view-level', referral.level || '');
+      
+      // Set grade as read-only text input
       setInputValue('view-grade', referral.grade || '');
       
-      // Format date for HTML date input (needs YYYY-MM-DD format)
+      // Format date for HTML date input
       const dateInput = document.getElementById('view-dateOfInterview');
       if (dateInput) {
         const dateValue = referral.dateOfInterview || referral.interviewDate || referral.date || referral.createdAt;
@@ -661,20 +712,20 @@ async function viewReferral(referralId) {
       setInputValue('view-severity', referral.severity || 'Low');
       setInputValue('view-notes', referral.notes || '');
       
-      // Re-populate the category dropdown before setting the value
+      // Re-populate the category dropdown
       const categorySelect = document.getElementById('view-category');
       if (categorySelect && availableCategories.length > 0) {
         populateCategoryDropdown(categorySelect, false);
         console.log('✅ Category dropdown re-populated');
       }
       
-      // Set the category value after dropdown is populated
+      // Set the category value
       if (categorySelect) {
         categorySelect.value = referral.category || '';
         console.log('🏷️ Category value set to:', referral.category || '(empty)');
       }
       
-      // Handle editable fields
+      // Handle editable fields based on whether studentId exists
       const form = document.getElementById('updateStatusForm');
       const isStudentSubmission = !referral.studentId || referral.studentId === '';
       if (form) {
@@ -694,14 +745,11 @@ async function viewReferral(referralId) {
       setFieldReadonly('view-studentId', !isStudentSubmission);
       setFieldReadonly('view-studentName', !isStudentSubmission);
       setFieldDisabled('view-level', !isStudentSubmission);
-      setFieldReadonly('view-grade', !isStudentSubmission);
+      setFieldReadonly('view-grade', true); // Grade is always read-only
       setFieldReadonly('view-adviser', !isStudentSubmission);
       
       // Handle status-based notes visibility
       handleStatusChange(referral.status);
-      
-      // Update grade options based on level
-      updateViewGradeOptions(referral.level, referral.grade);
       
       // Close the "All Referrals" modal if open
       closeAllReferralsModal();
@@ -753,36 +801,11 @@ function handleStatusChange(status) {
   }
 }
 
-// Update grade options in view modal
-function updateViewGradeOptions(level, selectedGrade = '') {
-  const gradeSelect = document.getElementById('view-grade');
-  if (!gradeSelect) return;
-  
-  gradeSelect.innerHTML = '<option value="">Select grade</option>';
-  
-  const gradeOptions = {
-    'Elementary': ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6'],
-    'JHS': ['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10'],
-    'SHS': ['Grade 11', 'Grade 12']
-  };
-  
-  if (level && gradeOptions[level]) {
-    gradeOptions[level].forEach(grade => {
-      const option = document.createElement('option');
-      option.value = grade;
-      option.textContent = grade;
-      gradeSelect.appendChild(option);
-    });
-    gradeSelect.disabled = false;
-    
-    if (selectedGrade) {
-      const gradeNumber = selectedGrade.replace('Grade ', '');
-      const formattedGrade = gradeNumber.includes('Grade') ? gradeNumber : `Grade ${gradeNumber}`;
-      gradeSelect.value = formattedGrade;
-    }
-  } else {
-    gradeSelect.disabled = true;
-  }
+// Handle level change in modal (display-only, no grade selection)
+function handleLevelChange(level) {
+  console.log('📋 Level changed to:', level);
+  // Grade field remains read-only and displays the current grade
+  // No need to populate grade options since it's read-only
 }
 
 // Handle status update
