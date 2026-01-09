@@ -835,7 +835,7 @@ tbody tr:hover {
 
 /* ========================================
    FORM STYLES
-   ======================================== */
+   ======================================== 
 .form-row {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -921,7 +921,7 @@ tbody tr:hover {
   min-height: 100px;
 }
 
-/* Category Dropdown Special Styling */
+/* Category Dropdown Special Styling 
 #view-category {
   background-color: var(--color-white);
   border: 1px solid var(--color-gray-300);
@@ -939,7 +939,7 @@ tbody tr:hover {
   font-style: italic;
 }
 
-/* Notes Section */
+/* Notes Section 
 #notesSection {
   margin-top: 16px;
   padding: 16px;
@@ -964,7 +964,7 @@ tbody tr:hover {
   }
 }
 
-/* Form Actions */
+/* Form Actions 
 .form-actions {
   display: flex;
   gap: 12px;
@@ -972,6 +972,393 @@ tbody tr:hover {
   padding-top: 20px;
   margin-top: 20px;
   border-top: 1px solid rgba(51, 51, 51, 0.5);
+}
+
+/* ========================================
+   RECEIPT-STYLE MODAL DESIGN
+   ======================================== */
+
+/* Receipt Modal Specific Styles */
+#viewReferralModal .modal-content {
+  max-width: 800px;
+  background: #ffffff;
+}
+
+/* Receipt Header */
+#viewReferralModal .modal-header {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+  padding: 24px 32px;
+  border-bottom: 3px solid var(--color-accent);
+  position: relative;
+}
+
+#viewReferralModal .modal-header::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--color-accent) 0px,
+    var(--color-accent) 10px,
+    transparent 10px,
+    transparent 20px
+  );
+}
+
+.receipt-header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.receipt-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.receipt-title h2 {
+  color: var(--color-white);
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+.receipt-title .material-symbols-outlined {
+  font-size: 32px;
+  color: var(--color-accent);
+}
+
+.receipt-id-badge {
+  background: var(--color-accent);
+  color: var(--color-primary);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(252, 243, 141, 0.3);
+}
+
+.receipt-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--color-beige-light);
+  font-size: 13px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(252, 243, 141, 0.2);
+}
+
+.receipt-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.receipt-meta-item .material-symbols-outlined {
+  font-size: 18px;
+  color: var(--color-accent);
+}
+
+/* Receipt Body */
+#viewReferralModal .modal-body {
+  padding: 32px;
+  background: #ffffff;
+}
+
+/* Receipt Section Styling */
+.receipt-section {
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 2px dashed var(--color-gray-200);
+}
+
+.receipt-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.receipt-section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  color: var(--color-primary);
+  font-size: 16px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--color-secondary);
+}
+
+.receipt-section-title .material-symbols-outlined {
+  font-size: 24px;
+  color: var(--color-secondary);
+}
+
+/* Receipt Field Styling */
+.receipt-field {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding: 12px;
+  background: var(--color-gray-50);
+  border-radius: 8px;
+  border-left: 3px solid var(--color-beige);
+  transition: all 0.2s ease;
+}
+
+.receipt-field:hover {
+  background: var(--color-beige-light);
+  border-left-color: var(--color-secondary);
+  transform: translateX(4px);
+}
+
+.receipt-field-label {
+  font-weight: 700;
+  color: var(--color-gray-700);
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  padding-top: 4px;
+}
+
+.receipt-field-value {
+  color: var(--color-gray-800);
+  font-size: 14px;
+  line-height: 1.6;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.receipt-field-value input,
+.receipt-field-value select,
+.receipt-field-value textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border: 2px solid var(--color-gray-300);
+  border-radius: 6px;
+  background: var(--color-white);
+  color: var(--color-gray-800);
+  font-size: 14px;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.receipt-field-value input:focus,
+.receipt-field-value select:focus,
+.receipt-field-value textarea:focus {
+  outline: none;
+  border-color: var(--color-secondary);
+  box-shadow: 0 0 0 3px rgba(98, 138, 107, 0.1);
+  background: var(--color-white);
+}
+
+.receipt-field-value input[readonly],
+.receipt-field-value select[disabled],
+.receipt-field-value textarea[readonly] {
+  background: var(--color-gray-100);
+  border-color: var(--color-gray-200);
+  color: var(--color-gray-600);
+  cursor: not-allowed;
+}
+
+.receipt-field-value textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+/* Full Width Fields */
+.receipt-field-full {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding: 16px;
+  background: var(--color-gray-50);
+  border-radius: 8px;
+  border-left: 3px solid var(--color-beige);
+}
+
+.receipt-field-full:hover {
+  background: var(--color-beige-light);
+  border-left-color: var(--color-secondary);
+}
+
+.receipt-field-full .receipt-field-label {
+  padding-top: 0;
+}
+
+/* Status and Severity Badges in Receipt */
+.receipt-status-badge,
+.receipt-severity-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.receipt-status-badge .material-symbols-outlined,
+.receipt-severity-badge .material-symbols-outlined {
+  font-size: 18px;
+}
+
+/* Editable Section Highlight */
+.receipt-editable-section {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(16, 185, 129, 0.02) 100%);
+  border: 2px solid rgba(16, 185, 129, 0.2);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.receipt-editable-section .receipt-section-title {
+  color: var(--color-success);
+  border-bottom-color: var(--color-success);
+}
+
+.receipt-editable-section .receipt-section-title .material-symbols-outlined {
+  color: var(--color-success);
+}
+
+/* Notes Section Special Styling */
+#notesSection.receipt-section {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(16, 185, 129, 0.03) 100%);
+  border: 2px solid rgba(16, 185, 129, 0.3);
+  border-radius: 12px;
+  padding: 24px;
+  animation: slideDown 0.3s ease;
+}
+
+#notesSection .receipt-field-full {
+  background: var(--color-white);
+  border-left-color: var(--color-success);
+}
+
+/* Receipt Footer with Actions */
+#viewReferralModal .modal-footer {
+  padding: 20px 32px;
+  background: var(--color-gray-50);
+  border-top: 2px solid var(--color-gray-200);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.receipt-footer-note {
+  color: var(--color-gray-600);
+  font-size: 12px;
+  font-style: italic;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.receipt-footer-note .material-symbols-outlined {
+  font-size: 16px;
+  color: var(--color-info);
+}
+
+.receipt-actions {
+  display: flex;
+  gap: 12px;
+}
+
+/* Print-Friendly Styling */
+@media print {
+  #viewReferralModal .modal {
+    position: static;
+    background: none;
+  }
+  
+  #viewReferralModal .modal-content {
+    box-shadow: none;
+    max-width: 100%;
+  }
+  
+  #viewReferralModal .modal-header {
+    background: var(--color-primary) !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  #viewReferralModal .modal-footer,
+  .receipt-actions,
+  .close {
+    display: none !important;
+  }
+  
+  .receipt-field:hover {
+    transform: none;
+  }
+}
+
+/* Responsive Design for Receipt Modal */
+@media (max-width: 768px) {
+  .receipt-header-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .receipt-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .receipt-field {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  
+  .receipt-field-label {
+    padding-top: 0;
+  }
+  
+  #viewReferralModal .modal-body {
+    padding: 20px;
+  }
+  
+  .receipt-section-title {
+    font-size: 14px;
+  }
+  
+  #viewReferralModal .modal-footer {
+    flex-direction: column-reverse;
+    gap: 12px;
+  }
+  
+  .receipt-footer-note {
+    width: 100%;
+    text-align: center;
+  }
+  
+  .receipt-actions {
+    width: 100%;
+    flex-direction: column-reverse;
+  }
+  
+  .receipt-actions button {
+    width: 100%;
+  }
 }
 
 /* ========================================
