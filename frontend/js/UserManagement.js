@@ -1,7 +1,10 @@
-// frontend/js/UserManagement.js - Professional Version
+// frontend/js/UserManagement.js - With Real-Time Duplicate Validation
+
+let usersData = []; // Cache for all users
+let debounceTimers = {}; // Debounce timers for validation
 
 document.addEventListener("DOMContentLoaded", async () => {
-  console.log("ðŸŸ¢ UserManagement.js loaded");
+  console.log("🚢 UserManagement.js loaded");
   
   // Load user profile first
   await loadUserProfile();
@@ -10,13 +13,16 @@ document.addEventListener("DOMContentLoaded", async () => {
   setupProfileDropdown();
   
   // Load other components
-  loadUsers();
+  await loadUsers(); // ✅ Load users for duplicate checking
   setupSearchFilter();
   setupFormSubmit();
   setupActionDelegation();
   setupModalHandling();
+  setupRoleBasedDepartments();
+  setupPasswordToggle();
+  setupRealtimeValidation(); // ✅ NEW: Real-time validation
   
-  console.log("âœ… User Management initialized successfully");
+  console.log("✅ User Management initialized successfully");
 });
 
 // ========== LOAD USER PROFILE ==========
@@ -63,7 +69,7 @@ async function loadUserProfile() {
           background: none;
         `;
         
-        console.log("âœ… Avatar created with initials:", initials);
+        console.log("✅ Avatar created with initials:", initials);
         
         // Hover effect
         profileButton.addEventListener('mouseenter', function() {
@@ -121,7 +127,7 @@ function setupProfileDropdown() {
       e.preventDefault();
       e.stopPropagation();
       profileDropdown.classList.toggle("show");
-      console.log("ðŸ”” Profile dropdown toggled");
+      console.log("🔽 Profile dropdown toggled");
     });
 
     document.addEventListener("click", (event) => {
@@ -132,6 +138,253 @@ function setupProfileDropdown() {
   }
 }
 
+// ========== SETUP REAL-TIME VALIDATION ==========
+function setupRealtimeValidation() {
+  const fullNameInput = document.getElementById("fullName");
+  const usernameInput = document.getElementById("username");
+  const emailInput = document.getElementById("email");
+
+  if (fullNameInput) {
+    fullNameInput.addEventListener("input", (e) => {
+      debounceValidation("fullName", () => {
+        validateFullNameRealtime(e.target);
+      });
+    });
+
+    fullNameInput.addEventListener("blur", () => {
+      validateFullNameRealtime(fullNameInput);
+    });
+  }
+
+  if (usernameInput) {
+    usernameInput.addEventListener("input", (e) => {
+      debounceValidation("username", () => {
+        validateUsernameRealtime(e.target);
+      });
+    });
+
+    usernameInput.addEventListener("blur", () => {
+      validateUsernameRealtime(usernameInput);
+    });
+  }
+
+  if (emailInput) {
+    emailInput.addEventListener("input", (e) => {
+      debounceValidation("email", () => {
+        validateEmailRealtime(e.target);
+      });
+    });
+
+    emailInput.addEventListener("blur", () => {
+      validateEmailRealtime(emailInput);
+    });
+  }
+}
+
+// ========== DEBOUNCE HELPER ==========
+function debounceValidation(fieldName, callback) {
+  if (debounceTimers[fieldName]) {
+    clearTimeout(debounceTimers[fieldName]);
+  }
+  
+  debounceTimers[fieldName] = setTimeout(() => {
+    callback();
+  }, 300); // 300ms delay
+}
+
+// ========== VALIDATION: FULL NAME ==========
+function validateFullNameRealtime(input) {
+  const fullName = input.value.trim();
+  const errorId = "fullName-error";
+  
+  // Clear validation if empty
+  if (!fullName) {
+    clearFieldError(input, errorId);
+    return true;
+  }
+
+  // Check for duplicate full name (case-insensitive)
+  const isDuplicate = usersData.some(user =>
+    user.fullName && user.fullName.toLowerCase() === fullName.toLowerCase()
+  );
+
+  if (isDuplicate) {
+    showFieldError(input, errorId, "Full name already exists");
+    return false;
+  } else {
+    clearFieldError(input, errorId);
+    return true;
+  }
+}
+
+// ========== VALIDATION: USERNAME ==========
+function validateUsernameRealtime(input) {
+  const username = input.value.trim();
+  const errorId = "username-error";
+  
+  // Clear validation if empty
+  if (!username) {
+    clearFieldError(input, errorId);
+    return true;
+  }
+
+  // Check minimum length
+  if (username.length < 3) {
+    showFieldError(input, errorId, "Username must be at least 3 characters");
+    return false;
+  }
+
+  // Check for duplicate username (case-insensitive)
+  const isDuplicate = usersData.some(user =>
+    user.username && user.username.toLowerCase() === username.toLowerCase()
+  );
+
+  if (isDuplicate) {
+    showFieldError(input, errorId, "Username already exists");
+    return false;
+  } else {
+    clearFieldError(input, errorId);
+    return true;
+  }
+}
+
+// ========== VALIDATION: EMAIL ==========
+function validateEmailRealtime(input) {
+  const email = input.value.trim();
+  const errorId = "email-error";
+  
+  // Clear validation if empty
+  if (!email) {
+    clearFieldError(input, errorId);
+    return true;
+  }
+
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    showFieldError(input, errorId, "Invalid email format");
+    return false;
+  }
+
+  // Check for duplicate email (case-insensitive)
+  const isDuplicate = usersData.some(user =>
+    user.email && user.email.toLowerCase() === email.toLowerCase()
+  );
+
+  if (isDuplicate) {
+    showFieldError(input, errorId, "Email already exists");
+    return false;
+  } else {
+    clearFieldError(input, errorId);
+    return true;
+  }
+}
+
+// ========== SHOW FIELD ERROR ==========
+function showFieldError(input, errorId, message) {
+  // Add error class to input
+  input.classList.remove("success-field");
+  input.classList.add("error-field");
+
+  // Find or create error message element
+  let errorElement = document.getElementById(errorId);
+  if (!errorElement) {
+    errorElement = document.createElement("div");
+    errorElement.id = errorId;
+    errorElement.className = "error-message";
+    input.parentNode.insertBefore(errorElement, input.nextSibling);
+  }
+
+  // Update error message with icon
+  errorElement.innerHTML = `
+    <span class="material-symbols-outlined">error</span>
+    <span>${message}</span>
+  `;
+  errorElement.style.display = "flex";
+}
+
+// ========== CLEAR FIELD ERROR ==========
+function clearFieldError(input, errorId) {
+  // Remove error class, add success class
+  input.classList.remove("error-field");
+  input.classList.add("success-field");
+
+  // Hide error message
+  const errorElement = document.getElementById(errorId);
+  if (errorElement) {
+    errorElement.style.display = "none";
+  }
+}
+
+// ========== SETUP ROLE-BASED DEPARTMENTS ==========
+function setupRoleBasedDepartments() {
+  const roleSelect = document.getElementById("role");
+  const departmentSelect = document.getElementById("department");
+  
+  if (!roleSelect || !departmentSelect) return;
+  
+  // Define department options for each role
+  const departmentsByRole = {
+    'Teacher': [
+      { value: 'Elementary', label: 'Elementary' },
+      { value: 'Junior High School', label: 'Junior High School' },
+      { value: 'Senior High School', label: 'Senior High School' }
+    ],
+    'Counselor': [
+      { value: 'Counselor', label: 'Counselor' }
+    ],
+    'Admin': [
+      { value: 'Admin', label: 'Admin' }
+    ]
+  };
+  
+  // Update departments when role changes
+  roleSelect.addEventListener('change', (e) => {
+    const selectedRole = e.target.value;
+    
+    // Clear current options
+    departmentSelect.innerHTML = '<option value="">Select Department</option>';
+    
+    // Add role-specific departments
+    if (selectedRole && departmentsByRole[selectedRole]) {
+      departmentsByRole[selectedRole].forEach(dept => {
+        const option = document.createElement('option');
+        option.value = dept.value;
+        option.textContent = dept.label;
+        departmentSelect.appendChild(option);
+      });
+      
+      // If only one option, auto-select it
+      if (departmentsByRole[selectedRole].length === 1) {
+        departmentSelect.value = departmentsByRole[selectedRole][0].value;
+      }
+    }
+  });
+}
+
+// ========== SETUP PASSWORD TOGGLE ==========
+function setupPasswordToggle() {
+  const toggleButton = document.getElementById("togglePassword");
+  const passwordInput = document.getElementById("temporaryPassword");
+  
+  if (!toggleButton || !passwordInput) return;
+  
+  toggleButton.addEventListener("click", (e) => {
+    e.preventDefault();
+    
+    // Toggle password visibility
+    const type = passwordInput.type === "password" ? "text" : "password";
+    passwordInput.type = type;
+    
+    // Toggle icon
+    const icon = toggleButton.querySelector(".material-symbols-outlined");
+    icon.textContent = type === "password" ? "visibility" : "visibility_off";
+    
+    // Update title
+    toggleButton.title = type === "password" ? "Show password" : "Hide password";
+  });
+}
+
 // ========== LOAD USERS ==========
 async function loadUsers() {
   const tbody = document.getElementById("usersTableBody");
@@ -140,12 +393,15 @@ async function loadUsers() {
   try {
     const response = await apiClient.getAllUsers();
     if (response.success && response.data && response.data.length > 0) {
+      usersData = response.data; // ✅ Store users for validation
       displayUsers(response.data);
     } else {
+      usersData = []; // ✅ Clear users if none found
       tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 3rem;">No users found</td></tr>';
     }
   } catch (error) {
     console.error("Error loading users:", error);
+    usersData = []; // ✅ Clear users on error
     if (typeof customAlert !== 'undefined') {
       customAlert.error("Failed to load users");
     }
@@ -163,7 +419,7 @@ function displayUsers(users) {
       <td>${escapeHtml(user.email)}</td>
       <td><span class="badge badge-${(user.role || '').toLowerCase()}">${user.role}</span></td>
       <td>${escapeHtml(user.department || 'N/A')}</td>
-      <td><span class="status-${user.isActive ? 'active' : 'inactive'}">${user.isActive ? 'â— Active' : 'â— Inactive'}</span></td>
+      <td><span class="status-${user.isActive ? 'active' : 'inactive'}">${user.isActive ? '● Active' : '● Inactive'}</span></td>
       <td>${new Date(user.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</td>
       <td style="text-align: center;">
         <button 
@@ -225,6 +481,44 @@ function setupSearchFilter() {
   }
 }
 
+// ========== PARSE ERROR MESSAGE FOR DUPLICATES ==========
+function parseErrorMessage(errorMsg) {
+  if (!errorMsg) return "Failed to create user";
+  
+  const lowerMsg = errorMsg.toLowerCase();
+  
+  // Check for specific duplicate errors with more patterns
+  if (lowerMsg.includes('username')) {
+    if (lowerMsg.includes('duplicate') || lowerMsg.includes('already exists') || 
+        lowerMsg.includes('taken') || lowerMsg.includes('already in use') ||
+        lowerMsg.includes('must be unique')) {
+      return "Duplicate username: This username is already taken";
+    }
+  }
+  
+  if (lowerMsg.includes('email')) {
+    if (lowerMsg.includes('duplicate') || lowerMsg.includes('already exists') || 
+        lowerMsg.includes('taken') || lowerMsg.includes('already in use') ||
+        lowerMsg.includes('must be unique')) {
+      return "Duplicate email: This email address is already registered";
+    }
+  }
+  
+  // MongoDB duplicate key error pattern (E11000)
+  if (lowerMsg.includes('e11000') || lowerMsg.includes('duplicate key')) {
+    if (lowerMsg.includes('username')) {
+      return "Duplicate username: This username is already taken";
+    }
+    if (lowerMsg.includes('email')) {
+      return "Duplicate email: This email address is already registered";
+    }
+    return "Duplicate entry: This record already exists";
+  }
+  
+  // Return original message if no specific duplicate found
+  return errorMsg;
+}
+
 // ========== SETUP FORM SUBMIT ==========
 function setupFormSubmit() {
   const form = document.getElementById("createUserForm");
@@ -233,18 +527,36 @@ function setupFormSubmit() {
   form.addEventListener("submit", async e => {
     e.preventDefault();
 
+    const fullNameInput = document.getElementById("fullName");
+    const usernameInput = document.getElementById("username");
+    const emailInput = document.getElementById("email");
+
+    // ✅ Validate all fields before submission
+    const isFullNameValid = validateFullNameRealtime(fullNameInput);
+    const isUsernameValid = validateUsernameRealtime(usernameInput);
+    const isEmailValid = validateEmailRealtime(emailInput);
+
+    if (!isFullNameValid || !isUsernameValid || !isEmailValid) {
+      if (typeof customAlert !== 'undefined') {
+        customAlert.error("Please fix the validation errors above before creating the user");
+      } else {
+        alert("Please fix the validation errors above before creating the user");
+      }
+      return;
+    }
+
     const formData = {
-      fullName: document.getElementById("fullName").value.trim(),
-      email: document.getElementById("email").value.trim(),
-      username: document.getElementById("username").value.trim(),
+      fullName: fullNameInput.value.trim(),
+      email: emailInput.value.trim(),
+      username: usernameInput.value.trim(),
       role: document.getElementById("role").value,
-      department: document.getElementById("department").value.trim(),
+      department: document.getElementById("department").value,
       password: document.getElementById("temporaryPassword").value,
       requirePasswordChange: true
     };
 
     // Validation
-    if (!formData.fullName || !formData.email || !formData.username || !formData.role || !formData.password) {
+    if (!formData.fullName || !formData.email || !formData.username || !formData.role || !formData.department || !formData.password) {
       if (typeof customAlert !== 'undefined') {
         customAlert.error("Please fill in all required fields");
       } else {
@@ -285,18 +597,25 @@ function setupFormSubmit() {
         
         await loadUsers();
       } else {
+        // Parse error message for specific duplicates
+        const errorMessage = parseErrorMessage(response.message || response.error);
+        
         if (typeof customAlert !== 'undefined') {
-          customAlert.error(response.message || "Failed to create user");
+          customAlert.error(errorMessage);
         } else {
-          alert(response.message || "Failed to create user");
+          alert(errorMessage);
         }
       }
     } catch (error) {
       console.error("Error creating user:", error);
+      
+      // Parse error message from exception
+      const errorMessage = parseErrorMessage(error.message || error.toString());
+      
       if (typeof customAlert !== 'undefined') {
-        customAlert.error(error.message || "Failed to create user");
+        customAlert.error(errorMessage);
       } else {
-        alert(error.message || "Failed to create user");
+        alert(errorMessage);
       }
     }
   });
@@ -308,6 +627,15 @@ function openCreateUserModal() {
   if (modal) {
     modal.classList.add("show");
     document.body.style.overflow = "hidden";
+    
+    // ✅ Clear validation errors when opening modal
+    const fullNameInput = document.getElementById("fullName");
+    const usernameInput = document.getElementById("username");
+    const emailInput = document.getElementById("email");
+    
+    clearFieldError(fullNameInput, "fullName-error");
+    clearFieldError(usernameInput, "username-error");
+    clearFieldError(emailInput, "email-error");
   }
 }
 
@@ -317,7 +645,23 @@ function closeCreateUserModal() {
     modal.classList.remove("show");
     document.body.style.overflow = "auto";
     const form = document.getElementById("createUserForm");
-    if (form) form.reset();
+    if (form) {
+      form.reset();
+      // Reset department dropdown to initial state
+      const departmentSelect = document.getElementById("department");
+      if (departmentSelect) {
+        departmentSelect.innerHTML = '<option value="">Select Department</option>';
+      }
+      
+      // ✅ Clear validation errors when closing modal
+      const fullNameInput = document.getElementById("fullName");
+      const usernameInput = document.getElementById("username");
+      const emailInput = document.getElementById("email");
+      
+      clearFieldError(fullNameInput, "fullName-error");
+      clearFieldError(usernameInput, "username-error");
+      clearFieldError(emailInput, "email-error");
+    }
   }
 }
 
