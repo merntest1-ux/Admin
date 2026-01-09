@@ -209,48 +209,71 @@
     </div>
   </div>
 
-  <!-- View/Update Single Referral Modal -->
-  <div id="viewReferralModal" class="modal">
-    <div class="modal-content" style="max-width: 800px;">
-      <div class="modal-header">
-        <h2>
-          <span class="material-symbols-outlined">article</span>
-          Referral Details
-        </h2>
-        <span class="close" onclick="closeViewModal()">&times;</span>
+<!-- View/Update Single Referral Modal - RECEIPT STYLE -->
+<div id="viewReferralModal" class="modal">
+  <div class="modal-content">
+    <!-- Receipt Header -->
+    <div class="modal-header">
+      <div class="receipt-header-content">
+        <div class="receipt-title">
+          <span class="material-symbols-outlined">receipt_long</span>
+          <h2>Referral Document</h2>
+        </div>
+        <div class="receipt-id-badge" id="view-referralId-display">
+          REF-XXXXX
+        </div>
       </div>
-      <div class="modal-body">
-        <form id="updateStatusForm">
-          <input type="hidden" id="viewReferralId">
-          
-          <!-- Student Information -->
-          <div class="form-row">
-            <div class="form-group">
-              <label for="view-referralId-display">Referral ID</label>
-              <input type="text" id="view-referralId-display" readonly>
+      <div class="receipt-meta">
+        <div class="receipt-meta-item">
+          <span class="material-symbols-outlined">event</span>
+          <span id="receipt-date-display">Date: Jan 08, 2026</span>
+        </div>
+        <div class="receipt-meta-item">
+          <span class="material-symbols-outlined">schedule</span>
+          <span id="receipt-time-display">Time: 10:30 AM</span>
+        </div>
+      </div>
+      <span class="close" onclick="closeViewModal()">&times;</span>
+    </div>
+
+    <!-- Receipt Body -->
+    <div class="modal-body">
+      <form id="updateStatusForm">
+        <input type="hidden" id="viewReferralId">
+
+        <!-- SECTION 1: Student Information -->
+        <div class="receipt-section">
+          <div class="receipt-section-title">
+            <span class="material-symbols-outlined">person</span>
+            Student Information
+          </div>
+
+          <div class="receipt-field">
+            <div class="receipt-field-label">
+              Student ID
+              <span id="studentIdEditBadge" class="edit-badge" style="display: none;">EDIT</span>
             </div>
-            <div class="form-group">
-              <label for="view-studentId">
-                Student ID 
-                <span id="studentIdEditBadge" class="edit-badge" style="display: none;">EDITABLE</span>
-              </label>
+            <div class="receipt-field-value">
               <input type="text" id="view-studentId" placeholder="Enter Student ID">
-            </div>
-            <div class="form-group">
-              <label for="view-studentName">
-                Student Name 
-                <span id="studentNameEditBadge" class="edit-badge" style="display: none;">EDITABLE</span>
-              </label>
-              <input type="text" id="view-studentName">
             </div>
           </div>
 
-          <div class="form-row">
-            <div class="form-group">
-              <label for="view-level">
-                Level
-                <span id="levelEditBadge" class="edit-badge" style="display: none;">EDITABLE</span>
-              </label>
+          <div class="receipt-field">
+            <div class="receipt-field-label">
+              Student Name
+              <span id="studentNameEditBadge" class="edit-badge" style="display: none;">EDIT</span>
+            </div>
+            <div class="receipt-field-value">
+              <input type="text" id="view-studentName" placeholder="Enter full name">
+            </div>
+          </div>
+
+          <div class="receipt-field">
+            <div class="receipt-field-label">
+              Level
+              <span id="levelEditBadge" class="edit-badge" style="display: none;">EDIT</span>
+            </div>
+            <div class="receipt-field-value">
               <select id="view-level">
                 <option value="">Select Level</option>
                 <option value="Elementary">Elementary</option>
@@ -258,43 +281,68 @@
                 <option value="SHS">Senior High School</option>
               </select>
             </div>
-            <div class="form-group">
-              <label for="view-grade">
-                Grade
-                <span id="gradeEditBadge" class="edit-badge" style="display: none;">EDITABLE</span>
-              </label>
-              <input type="text" id="view-grade" placeholder="e.g., Grade 7, Grade 11">
-            </div>
           </div>
 
-          <div class="form-row">
-            <div class="form-group">
-              <label for="view-dateOfInterview">Date of Interview</label>
+          <div class="receipt-field">
+            <div class="receipt-field-label">
+              Grade
+              <span id="gradeEditBadge" class="edit-badge" style="display: none;">EDIT</span>
+            </div>
+            <div class="receipt-field-value">
+              <input type="text" id="view-grade" placeholder="e.g., Grade 7">
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 2: Referral Details -->
+        <div class="receipt-section">
+          <div class="receipt-section-title">
+            <span class="material-symbols-outlined">description</span>
+            Referral Details
+          </div>
+
+          <div class="receipt-field">
+            <div class="receipt-field-label">Interview Date</div>
+            <div class="receipt-field-value">
               <input type="date" id="view-dateOfInterview" readonly>
             </div>
-            <div class="form-group">
-              <label for="view-adviser">
-                Referred By
-                <span id="adviserEditBadge" class="edit-badge" style="display: none;">EDITABLE</span>
-              </label>
-              <input type="text" id="view-adviser">
+          </div>
+
+          <div class="receipt-field">
+            <div class="receipt-field-label">
+              Referred By
+              <span id="adviserEditBadge" class="edit-badge" style="display: none;">EDIT</span>
+            </div>
+            <div class="receipt-field-value">
+              <input type="text" id="view-adviser" placeholder="Adviser/Teacher name">
             </div>
           </div>
 
-          <div class="form-group">
-            <label for="view-reason">Reason for Referral</label>
-            <input type="text" id="view-reason" readonly>
+          <div class="receipt-field-full">
+            <div class="receipt-field-label">Reason for Referral</div>
+            <div class="receipt-field-value">
+              <input type="text" id="view-reason" readonly>
+            </div>
           </div>
 
-          <div class="form-group">
-            <label for="view-description">Description</label>
-            <textarea id="view-description" rows="3" readonly></textarea>
+          <div class="receipt-field-full">
+            <div class="receipt-field-label">Description</div>
+            <div class="receipt-field-value">
+              <textarea id="view-description" rows="4" readonly></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 3: Assessment & Status (Editable) -->
+        <div class="receipt-editable-section">
+          <div class="receipt-section-title">
+            <span class="material-symbols-outlined">edit_note</span>
+            Assessment & Status
           </div>
 
-          <!-- Editable Fields -->
-          <div class="form-row">
-            <div class="form-group">
-              <label for="view-status">Status</label>
+          <div class="receipt-field">
+            <div class="receipt-field-label">Current Status</div>
+            <div class="receipt-field-value">
               <select id="view-status" required>
                 <option value="Pending">Pending</option>
                 <option value="Under Review">Under Review</option>
@@ -302,8 +350,11 @@
                 <option value="Complete">Complete</option>
               </select>
             </div>
-            <div class="form-group">
-              <label for="view-severity">Severity Level</label>
+          </div>
+
+          <div class="receipt-field">
+            <div class="receipt-field-label">Severity Level</div>
+            <div class="receipt-field-value">
               <select id="view-severity" required>
                 <option value="Low">Low</option>
                 <option value="Medium">Medium</option>
@@ -312,32 +363,54 @@
             </div>
           </div>
 
-          <!-- Category Dropdown -->
-          <div class="form-group">
-            <label for="view-category">
+          <div class="receipt-field-full">
+            <div class="receipt-field-label">
               Category
-              <span style="color: #9ca3af; font-weight: normal; font-size: 0.875rem;"></span>
-            </label>
-            <select id="view-category">
-              <option value="">Select Category</option>
-              <!-- Options will be populated dynamically by JavaScript -->
-            </select>
+              <span style="color: #9ca3af; font-weight: normal; font-size: 0.875rem;">(Optional)</span>
+            </div>
+            <div class="receipt-field-value">
+              <select id="view-category">
+                <option value="">Select Category</option>
+                <!-- Options populated by JavaScript -->
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 4: Consultation Notes (Conditional) -->
+        <div class="receipt-section" id="notesSection" style="display: none;">
+          <div class="receipt-section-title">
+            <span class="material-symbols-outlined">note_add</span>
+            Consultation Notes
           </div>
 
-          <!-- Notes Section -->
-          <div class="form-group" id="notesSection" style="display: none;">
-            <label for="view-notes">Consultation Notes *</label>
-            <textarea id="view-notes" rows="4" placeholder="Add notes about the consultation..."></textarea>
+          <div class="receipt-field-full">
+            <div class="receipt-field-label">Notes *</div>
+            <div class="receipt-field-value">
+              <textarea id="view-notes" rows="5" placeholder="Enter consultation notes here..."></textarea>
+            </div>
           </div>
+        </div>
 
-          <div class="form-actions">
-            <button type="button" id="cancelViewModalBtn" class="btn-secondary">Cancel</button>
-            <button type="submit" class="btn-primary">Update Referral</button>
-          </div>
-        </form>
+      </form>
+    </div>
+
+    <!-- Receipt Footer -->
+    <div class="modal-footer">
+      <div class="receipt-footer-note">
+        <span class="material-symbols-outlined">info</span>
+        Changes will be saved to the system
+      </div>
+      <div class="receipt-actions">
+        <button type="button" id="cancelViewModalBtn" class="btn-secondary">Cancel</button>
+        <button type="submit" form="updateStatusForm" class="btn-primary">
+          <span class="material-symbols-outlined" style="font-size: 18px; margin-right: 4px;">save</span>
+          Update Referral
+        </button>
       </div>
     </div>
   </div>
+</div>
 
   <!-- Delete Confirmation Modal -->
   <div id="deleteConfirmModal" class="modal">
@@ -365,6 +438,4 @@
   <script src="../../js/logout.js"></script>
   <script src="../js/Referral.js"></script>
 </body>
-
 </html>
-
