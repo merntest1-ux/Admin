@@ -5,10 +5,8 @@
 function handleLogout(event) {
   event.preventDefault();
   
-  // Check if customAlert is loaded
   if (typeof customAlert === 'undefined') {
     console.error('customAlert not loaded yet');
-    // Fallback to native confirm
     if (confirm('Are you sure you want to log out?')) {
       performSecureLogout();
     }
@@ -18,7 +16,6 @@ function handleLogout(event) {
   customAlert.confirm(
     "Are you sure you want to log out?",
     () => {
-      // User clicked "Confirm" - perform secure logout
       performSecureLogout();
     },
     "Logout Confirmation"
@@ -27,23 +24,17 @@ function handleLogout(event) {
 
 async function performSecureLogout() {
   try {
-    // 1. Get token before clearing (for API call)
     const token = getSecureToken();
     
-    // 2. Call backend logout API to invalidate token server-side
     if (token) {
       await invalidateTokenOnServer(token);
     }
     
-    // 3. Clear all client-side data
     clearAllClientData();
-    
-    // 4. Show thank you message and redirect
     showThankYouAndRedirect();
     
   } catch (error) {
     console.error('Logout error:', error);
-    // Even if server call fails, clear client data
     clearAllClientData();
     showThankYouAndRedirect();
   }
@@ -51,12 +42,10 @@ async function performSecureLogout() {
 
 function getSecureToken() {
   try {
-    // Try to get token from memory first (most secure)
     if (window.authToken) {
       return window.authToken;
     }
     
-    // Fallback to storage (less secure but common)
     return localStorage.getItem('token') || 
            sessionStorage.getItem('token') || 
            sessionStorage.getItem('authToken') || 
@@ -75,7 +64,7 @@ async function invalidateTokenOnServer(token) {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      credentials: 'include' // Include cookies for session management
+      credentials: 'include'
     });
     
     if (!response.ok) {
@@ -85,13 +74,14 @@ async function invalidateTokenOnServer(token) {
     return response;
   } catch (error) {
     console.error('Server logout error:', error);
-    // Don't throw - we still want to clear client data
   }
 }
 
 function clearAllClientData() {
   try {
-    // Clear all possible token storage locations
+    // ✅ FIXED: Set logout flag BEFORE clearing storage
+    sessionStorage.setItem('justLoggedOut', 'true');
+    
     const keysToRemove = [
       'token',
       'authToken',
@@ -101,7 +91,7 @@ function clearAllClientData() {
       'userData',
       'session',
       'sessionId',
-      'currentUser'  // ✅ FIXED: Added currentUser
+      'currentUser'
     ];
     
     // Clear localStorage
@@ -109,18 +99,16 @@ function clearAllClientData() {
       localStorage.removeItem(key);
     });
     
-    // Clear sessionStorage completely
+    // Clear sessionStorage (except justLoggedOut flag)
+    const logoutFlag = sessionStorage.getItem('justLoggedOut');
     sessionStorage.clear();
-    
-    // ✅ FIXED: Set logout flag AFTER clearing sessionStorage
-    sessionStorage.setItem('justLoggedOut', 'true');
+    sessionStorage.setItem('justLoggedOut', logoutFlag);
     
     // Clear in-memory token
     if (window.authToken) {
       delete window.authToken;
     }
     
-    // Clear any authentication cookies (if using cookies)
     clearAuthCookies();
     
     console.log('✅ All client data cleared');
@@ -130,18 +118,15 @@ function clearAllClientData() {
 }
 
 function clearAuthCookies() {
-  // Clear common authentication cookie names
   const cookiesToClear = ['token', 'auth', 'session', 'jwt'];
   
   cookiesToClear.forEach(name => {
-    // Set cookie to expire in the past
     document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
     document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname};`;
   });
 }
 
 function showThankYouAndRedirect() {
-  // Create thank you overlay
   const thankYouHTML = `
     <div id="thankYouOverlay" style="
       position: fixed;
@@ -197,11 +182,8 @@ function showThankYouAndRedirect() {
   
   document.body.insertAdjacentHTML('beforeend', thankYouHTML);
   
-  // Redirect to login page after 2 seconds
   setTimeout(() => {
-    // TODO: UPDATE THIS PATH TO YOUR LoginForm.html LOCATION
-    // Use replace to prevent back button from returning to authenticated page
-    window.location.replace('../../pages/LoginForm.html');
+    window.location.replace('/pages/LoginForm.html');
   }, 2000);
 }
 
@@ -211,9 +193,7 @@ function showThankYouAndRedirect() {
 document.addEventListener('DOMContentLoaded', function() {
   console.log("🔒 Secure logout handler initialized");
   
-  // Wait a bit to ensure customAlert is loaded
   setTimeout(() => {
-    // Find all logout links - multiple possible patterns
     const logoutSelectors = [
       'a[href="../../pages/LoginForm.html"]',
       'a[href="../pages/LoginForm.html"]',
@@ -225,7 +205,6 @@ document.addEventListener('DOMContentLoaded', function() {
     logoutSelectors.forEach(selector => {
       const links = document.querySelectorAll(selector);
       links.forEach(link => {
-        // Check if it's a logout link (contains logout icon or text)
         const isLogoutLink = link.innerHTML.includes('logout') || 
                             link.textContent.toLowerCase().includes('logout');
         
@@ -241,14 +220,5 @@ document.addEventListener('DOMContentLoaded', function() {
       console.warn("⚠️ No logout links found. Check your HTML structure.");
     }
 
-  }, 100); // Small delay to ensure customAlert is loaded
-});
-
-// ============================================
-// ADDITIONAL SECURITY: Auto-logout on tab close
-// ============================================
-window.addEventListener('beforeunload', function() {
-  // Optional: Clear sensitive data when browser closes
-  // Uncomment if you want to auto-clear on tab close
-  // clearAllClientData();
+  }, 100);
 });
