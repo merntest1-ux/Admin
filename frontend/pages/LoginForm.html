@@ -123,7 +123,8 @@
                     // If user has valid token and didn't just logout, redirect to dashboard
                     if (token && !justLoggedOut) {
                         console.log('⚠️ User already authenticated, redirecting to dashboard...');
-                        window.location.replace('../admin/dashboard.html'); // Update path if needed
+                        // ✅ FIXED: Dashboard.html is in the SAME folder as LoginForm.html
+                        window.location.replace('./Dashboard.html');
                         return;
                     }
                     
