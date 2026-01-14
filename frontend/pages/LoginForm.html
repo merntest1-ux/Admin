@@ -5,18 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
 
+    <!-- Prevent caching of login page -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
     <link rel="stylesheet" href="../css/LoginForm.css">
     <link rel="stylesheet" href="../assets/css/custom-alert.css">
-    <!-- Add Font Awesome for eye icon -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        /* Style for password input container */
         .input-box {
             position: relative;
         }
         
-        /* Style for the eye icon */
         .toggle-password {
             position: absolute;
             right: 15px;
@@ -31,12 +33,85 @@
             color: #333;
         }
         
-        /* Adjust input padding to make room for icon */
         .input-box input[type="password"],
         .input-box input[type="text"]#password {
             padding-right: 45px;
         }
+
+        /* Logout success message */
+        .logout-success {
+            background: #d1fae5;
+            color: #065f46;
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            display: none;
+            animation: slideDown 0.3s ease;
+            font-weight: 500;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
+
+    <!-- Check if user is already logged in or just logged out -->
+    <script>
+        (function() {
+            // Check if user just logged out
+            const justLoggedOut = sessionStorage.getItem('justLoggedOut');
+            if (justLoggedOut === 'true') {
+                sessionStorage.removeItem('justLoggedOut');
+                // Show logout success message
+                window.addEventListener('DOMContentLoaded', function() {
+                    const successDiv = document.getElementById('logoutSuccess');
+                    if (successDiv) {
+                        successDiv.style.display = 'block';
+                        setTimeout(() => {
+                            successDiv.style.display = 'none';
+                        }, 4000);
+                    }
+                });
+                return; // Don't redirect, user just logged out
+            }
+
+            // If user is already authenticated, redirect to appropriate dashboard
+            const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+            const userStr = localStorage.getItem('user') || localStorage.getItem('currentUser');
+            
+            if (token && userStr) {
+                try {
+                    const user = JSON.parse(userStr);
+                    console.log('✅ User already logged in, redirecting...');
+                    
+                    // Redirect based on role
+                    const redirectMap = {
+                        'admin': '/pages/AdminDashboard.html',
+                        'student': '/pages/StudentDashboard.html',
+                        'teacher': '/pages/TeacherDashboard.html'
+                    };
+                    
+                    const redirectPath = redirectMap[user.role] || '/pages/Dashboard.html';
+                    window.location.replace(redirectPath);
+                } catch (e) {
+                    console.error('Error parsing user data:', e);
+                    // Clear invalid data
+                    localStorage.removeItem('user');
+                    localStorage.removeItem('currentUser');
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('authToken');
+                }
+            }
+        })();
+    </script>
 </head>
 
 <body>
@@ -49,6 +124,11 @@
             </div>
 
             <h1>Login</h1>
+
+            <!-- Logout success message -->
+            <div id="logoutSuccess" class="logout-success">
+                ✓ You have been successfully logged out
+            </div>
 
             <div id="errorMessage" class="error-box" style="display: none;"></div> 
             <div id="successMessage" style="display: none;"></div>
@@ -101,11 +181,8 @@
         const passwordInput = document.getElementById('password');
         
         togglePassword.addEventListener('click', function() {
-            // Toggle the type attribute
             const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
             passwordInput.setAttribute('type', type);
-            
-            // Toggle the eye icon
             this.classList.toggle('fa-eye');
             this.classList.toggle('fa-eye-slash');
         });
