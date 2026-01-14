@@ -1,8 +1,16 @@
 // LoginForm.js - CORRECTED: Fixed token access and response handling
 
+let isLoggingIn = false; // Prevent multiple submissions
+
 // ---------------- Login ----------------
 document.getElementById("loginForm").addEventListener("submit", async (e) => {
   e.preventDefault();
+
+  // Prevent multiple submissions
+  if (isLoggingIn) {
+    console.log('⚠️ Login already in progress...');
+    return;
+  }
 
   const username = document.getElementById("username").value.trim();
   const password = document.getElementById("password").value;
@@ -18,16 +26,17 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
     return;
   }
 
+  isLoggingIn = true;
   submitBtn.disabled = true;
   submitBtn.textContent = "Logging in...";
 
   try {
-    console.log('ðŸ“„ Attempting login...');
+    console.log('🔐 Attempting login...');
     const response = await apiClient.login(username, password);
-    console.log('ðŸ“¥ Login response:', response);
+    console.log('📥 Login response:', response);
 
     if (response.success) {
-      console.log('âœ… Login successful!');
+      console.log('✅ Login successful!');
       
       // CORRECTED: api-client spreads backend data directly into response (no .data nesting)
       // Backend sends: { success: true, token: "...", user: {...}, redirectPath: "..." }
@@ -35,7 +44,7 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
       
       // Check if we have the token and user data
       if (!response.token || !response.user) {
-        console.error('âŒ Invalid response structure:', response);
+        console.error('❌ Invalid response structure:', response);
         throw new Error('Invalid server response. Please try again.');
       }
       
@@ -44,18 +53,18 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
       localStorage.setItem("user", JSON.stringify(response.user));
       localStorage.setItem("currentUser", JSON.stringify(response.user)); // For compatibility
       
-      console.log('ðŸ‘¤ User data:', response.user);
-      console.log('ðŸŽ­ User role:', response.user.role);
+      console.log('💾 User data:', response.user);
+      console.log('🎭 User role:', response.user.role);
 
       // Show success message
       customAlert.success("Login successful!");
 
       // Handle password change requirement FIRST (takes priority)
       if (response.user.requirePasswordChange) {
-        console.log('âš ï¸ Password change required - redirecting to change password page...');
+        console.log('⚠️ Password change required - redirecting to change password page...');
         setTimeout(() => {
-          console.log('ðŸ”„ Redirecting to change password');
-          window.location.href = "/ChangePassword.html";
+          console.log('➡️ Redirecting to change password');
+          window.location.replace("/ChangePassword.html");
         }, 1200);
         return;
       }
@@ -64,18 +73,18 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
       const redirectPath = response.redirectPath;
       const userRole = response.user.role;
       
-      console.log('ðŸŽ¯ User role:', userRole);
-      console.log('ðŸš€ Redirect path from backend:', redirectPath);
+      console.log('🎯 User role:', userRole);
+      console.log('🚀 Redirect path from backend:', redirectPath);
 
       // Validate that we received a valid redirect path
       if (!redirectPath) {
-        console.error('âŒ No redirect path received from backend!');
+        console.error('❌ No redirect path received from backend!');
         throw new Error('Invalid role configuration. Please contact administrator.');
       }
 
       setTimeout(() => {
-        console.log('âœ… Redirecting to:', redirectPath);
-        window.location.href = redirectPath;
+        console.log('✅ Redirecting to:', redirectPath);
+        window.location.replace(redirectPath); // Use replace to prevent back button issues
       }, 1200);
       return;
     }
@@ -84,14 +93,20 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
     throw new Error(response.message || response.error || "Invalid username or password.");
     
   } catch (error) {
-    console.error("âŒ Login error:", error);
+    console.error("❌ Login error:", error);
     customAlert.error(error.message || "Login failed. Please check your credentials.");
     errorMessage.textContent = error.message || "Login failed. Please check your credentials.";
     errorMessage.style.display = "block";
 
+    isLoggingIn = false;
     submitBtn.disabled = false;
     submitBtn.textContent = "Login";
   }
+});
+
+// Reset login flag if user navigates away
+window.addEventListener('beforeunload', () => {
+  isLoggingIn = false;
 });
 
 // ---------------- Forgot Password ----------------
