@@ -7,11 +7,13 @@
 (function() {
   'use strict';
   
+  console.log('🛡️ Auth Guard checking authentication...');
+  
   // Check if user just logged out
   const justLoggedOut = sessionStorage.getItem('justLoggedOut');
   
   if (justLoggedOut === 'true') {
-    // User just logged out, clear the flag and redirect
+    console.log('🚪 User just logged out - redirecting to login');
     sessionStorage.removeItem('justLoggedOut');
     window.location.replace('/pages/LoginForm.html');
     return;
@@ -37,13 +39,27 @@
     return;
   }
   
+  console.log('✅ User authenticated - access granted');
+  
   // Prevent browser caching of authenticated pages
   window.addEventListener('pageshow', function(event) {
     // If page is loaded from cache (user pressed back button)
-    if (event.persisted || performance.getEntriesByType("navigation")[0]?.type === "back_forward") {
+    if (event.persisted || (window.performance && performance.getEntriesByType("navigation")[0]?.type === "back_forward")) {
+      console.log('📄 Page loaded from cache - checking authentication');
       // Check authentication again
       if (!isAuthenticated()) {
         console.warn('⚠️ Page loaded from cache but user not authenticated');
+        window.location.replace('/pages/LoginForm.html');
+      }
+    }
+  });
+  
+  // Additional check when page becomes visible (browser tab activation)
+  document.addEventListener('visibilitychange', function() {
+    if (!document.hidden) {
+      // Page became visible, check authentication
+      if (!isAuthenticated()) {
+        console.warn('⚠️ Page visible but user not authenticated');
         window.location.replace('/pages/LoginForm.html');
       }
     }
