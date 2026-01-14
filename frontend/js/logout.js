@@ -137,6 +137,13 @@ function clearAuthCookies() {
 }
 
 function showThankYouAndRedirect() {
+  // Set logout flag in sessionStorage to prevent back button access
+  try {
+    sessionStorage.setItem('justLoggedOut', 'true');
+  } catch (e) {
+    console.error('Could not set logout flag:', e);
+  }
+  
   // Create thank you overlay
   const thankYouHTML = `
     <div id="thankYouOverlay" style="
