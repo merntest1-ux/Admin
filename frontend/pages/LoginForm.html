@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
 
+    <!-- Prevent browser caching for security -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
     <link rel="stylesheet" href="../css/LoginForm.css">
     <link rel="stylesheet" href="../assets/css/custom-alert.css">
     <!-- Add Font Awesome for eye icon -->
@@ -55,12 +60,12 @@
 
             <!-- Username -->
             <div class="input-box">
-                <input type="text" id="username" placeholder="Username" required>
+                <input type="text" id="username" placeholder="Username" autocomplete="off" required>
             </div>
 
             <!-- Password with Eye Icon -->
             <div class="input-box">
-                <input type="password" id="password" placeholder="Password" required>
+                <input type="password" id="password" placeholder="Password" autocomplete="off" required>
                 <i class="fa-regular fa-eye toggle-password" id="togglePassword"></i>
             </div>
 
@@ -89,6 +94,166 @@
             <div id="fpMessage" class="fp-message"></div>
         </div>
     </div>
+
+    <!-- ============================================ -->
+    <!-- CRITICAL: LOGIN PAGE SECURITY SCRIPT -->
+    <!-- Must load BEFORE other scripts -->
+    <!-- ============================================ -->
+    <script>
+        // LOGIN PAGE SECURITY - Prevent Back Button Issues & Form Cache
+        (function() {
+            'use strict';
+            
+            console.log('🔒 Initializing login page security...');
+            
+            // ============================================
+            // 1. Check Authentication Status
+            // ============================================
+            function checkAuthenticationStatus() {
+                try {
+                    // Check if user just logged out
+                    const justLoggedOut = sessionStorage.getItem('justLoggedOut');
+                    
+                    // Check if user has valid token (shouldn't be on login page)
+                    const token = localStorage.getItem('token') || 
+                                 sessionStorage.getItem('token') ||
+                                 localStorage.getItem('authToken') ||
+                                 sessionStorage.getItem('authToken');
+                    
+                    // If user has valid token and didn't just logout, redirect to dashboard
+                    if (token && !justLoggedOut) {
+                        console.log('⚠️ User already authenticated, redirecting to dashboard...');
+                        window.location.replace('../admin/dashboard.html'); // Update path if needed
+                        return;
+                    }
+                    
+                    // Clear the logout flag after checking
+                    if (justLoggedOut) {
+                        console.log('✅ Logout flag cleared');
+                        sessionStorage.removeItem('justLoggedOut');
+                    }
+                    
+                } catch (e) {
+                    console.error('Auth check error:', e);
+                }
+            }
+            
+            // ============================================
+            // 2. Clear All Login Form Data
+            // ============================================
+            function clearLoginForm() {
+                try {
+                    console.log('🧹 Clearing login form data...');
+                    
+                    // Clear all text and password inputs
+                    const inputs = document.querySelectorAll('input[type="text"], input[type="password"], input[type="email"]');
+                    inputs.forEach(input => {
+                        input.value = '';
+                    });
+                    
+                    // Clear remember me checkbox
+                    const rememberCheckbox = document.querySelector('input[type="checkbox"]');
+                    if (rememberCheckbox) {
+                        rememberCheckbox.checked = false;
+                    }
+                    
+                    // Hide all error and success messages
+                    const errorMessage = document.getElementById('errorMessage');
+                    const successMessage = document.getElementById('successMessage');
+                    
+                    if (errorMessage) {
+                        errorMessage.style.display = 'none';
+                        errorMessage.textContent = '';
+                    }
+                    
+                    if (successMessage) {
+                        successMessage.style.display = 'none';
+                        successMessage.textContent = '';
+                    }
+                    
+                    // Remove any custom alert overlays
+                    const overlays = document.querySelectorAll('.custom-alert-overlay, #thankYouOverlay, [id*="Overlay"], [class*="overlay"]');
+                    overlays.forEach(overlay => {
+                        overlay.remove();
+                    });
+                    
+                    // Clear any other alerts or notifications
+                    const alerts = document.querySelectorAll('.alert, .notification, .success-box, .error-box[style*="display: block"]');
+                    alerts.forEach(alert => {
+                        alert.style.display = 'none';
+                        alert.textContent = '';
+                    });
+                    
+                    console.log('✅ Form cleared successfully');
+                    
+                } catch (e) {
+                    console.error('Form clear error:', e);
+                }
+            }
+            
+            // ============================================
+            // 3. Prevent Browser Cache (BFCache)
+            // ============================================
+            function preventBFCache() {
+                // This prevents the page from being loaded from cache when using back button
+                window.addEventListener('pageshow', function(event) {
+                    // If page is loaded from cache (persisted = true)
+                    if (event.persisted) {
+                        console.log('⚠️ Page loaded from browser cache (back button pressed)');
+                        clearLoginForm();
+                        checkAuthenticationStatus();
+                        
+                        // Force reload to get fresh page
+                        window.location.reload();
+                    }
+                });
+                
+                // Clear data when leaving page
+                window.addEventListener('pagehide', function() {
+                    clearLoginForm();
+                });
+            }
+            
+            // ============================================
+            // 4. Handle Browser Back Button
+            // ============================================
+            function handleBackButton() {
+                // Push a state to prevent back navigation
+                history.pushState(null, null, location.href);
+                
+                window.addEventListener('popstate', function() {
+                    // Push state again to stay on login page
+                    history.pushState(null, null, location.href);
+                    
+                    // Clear form and check authentication
+                    clearLoginForm();
+                    checkAuthenticationStatus();
+                });
+            }
+            
+            // ============================================
+            // 5. Initialize Security on Page Load
+            // ============================================
+            function initializeSecurity() {
+                console.log('🔒 Login page security initialized');
+                clearLoginForm();
+                preventBFCache();
+                handleBackButton();
+            }
+            
+            // Run authentication check immediately (before DOM loads)
+            checkAuthenticationStatus();
+            
+            // Initialize security features when DOM is ready
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initializeSecurity);
+            } else {
+                // DOM already loaded
+                initializeSecurity();
+            }
+            
+        })();
+    </script>
 
     <!-- API Client + Alert + Login JS -->
     <script src="../api/api-client.js"></script>
