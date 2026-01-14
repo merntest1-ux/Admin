@@ -79,7 +79,9 @@ async function invalidateTokenOnServer(token) {
 
 function clearAllClientData() {
   try {
-    // ✅ FIXED: Set logout flag BEFORE clearing storage
+    console.log('🧹 Clearing all client data...');
+    
+    // ✅ CRITICAL: Set logout flag FIRST, before clearing anything
     sessionStorage.setItem('justLoggedOut', 'true');
     
     const keysToRemove = [
@@ -99,7 +101,7 @@ function clearAllClientData() {
       localStorage.removeItem(key);
     });
     
-    // Clear sessionStorage (except justLoggedOut flag)
+    // Clear sessionStorage BUT preserve the justLoggedOut flag
     const logoutFlag = sessionStorage.getItem('justLoggedOut');
     sessionStorage.clear();
     sessionStorage.setItem('justLoggedOut', logoutFlag);
@@ -183,6 +185,7 @@ function showThankYouAndRedirect() {
   document.body.insertAdjacentHTML('beforeend', thankYouHTML);
   
   setTimeout(() => {
+    // Use replace to prevent back button from returning to authenticated page
     window.location.replace('/pages/LoginForm.html');
   }, 2000);
 }
@@ -197,7 +200,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const logoutSelectors = [
       'a[href="../../pages/LoginForm.html"]',
       'a[href="../pages/LoginForm.html"]',
-      'a[href*="LoginForm.html"]'
+      'a[href*="LoginForm.html"]',
+      'a[onclick*="logout"]',
+      'button[onclick*="logout"]'
     ];
     
     let logoutLinksFound = 0;
@@ -205,8 +210,9 @@ document.addEventListener('DOMContentLoaded', function() {
     logoutSelectors.forEach(selector => {
       const links = document.querySelectorAll(selector);
       links.forEach(link => {
-        const isLogoutLink = link.innerHTML.includes('logout') || 
-                            link.textContent.toLowerCase().includes('logout');
+        const isLogoutLink = link.innerHTML.toLowerCase().includes('logout') || 
+                            link.textContent.toLowerCase().includes('logout') ||
+                            link.getAttribute('onclick')?.includes('logout');
         
         if (isLogoutLink) {
           console.log("✅ Logout link found and secure handler attached");
@@ -218,6 +224,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (logoutLinksFound === 0) {
       console.warn("⚠️ No logout links found. Check your HTML structure.");
+    } else {
+      console.log(`✅ ${logoutLinksFound} logout link(s) secured`);
     }
 
   }, 100);
