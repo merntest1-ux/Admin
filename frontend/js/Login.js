@@ -1,80 +1,6 @@
-// LoginForm.js - ENHANCED WITH SECURITY FEATURES
+// LoginForm.js - CORRECTED: Fixed token access and response handling
 
-// ============================================
-// SECURITY: Clear any leftover overlays on page load
-// ============================================
-(function() {
-    window.addEventListener('load', function() {
-        console.log('🔒 Clearing any leftover overlays and messages...');
-        
-        // Remove any success/logout overlays
-        const overlays = document.querySelectorAll(
-            '#thankYouOverlay, ' +
-            '[id*="Overlay"], ' +
-            '.custom-alert-overlay, ' +
-            '[class*="overlay"]'
-        );
-        
-        overlays.forEach(overlay => {
-            console.log('🗑️ Removing overlay:', overlay.id || overlay.className);
-            overlay.remove();
-        });
-        
-        // Clear success/error messages
-        const successMsg = document.getElementById('successMessage');
-        const errorMsg = document.getElementById('errorMessage');
-        
-        if (successMsg) {
-            successMsg.style.display = 'none';
-            successMsg.textContent = '';
-        }
-        
-        if (errorMsg) {
-            errorMsg.style.display = 'none';
-            errorMsg.textContent = '';
-        }
-        
-        console.log('✅ Page cleanup complete');
-    });
-})();
-
-// ============================================
-// SECURITY: Prevent form autocomplete on focus
-// ============================================
-document.addEventListener('DOMContentLoaded', function() {
-    const usernameInput = document.getElementById('username');
-    const passwordInput = document.getElementById('password');
-    
-    // Clear fields on focus if they contain cached data
-    if (usernameInput) {
-        usernameInput.addEventListener('focus', function(e) {
-            // Only clear if coming from browser cache (not user-typed)
-            if (e.target.value && !e.target.dataset.userTyped) {
-                e.target.value = '';
-            }
-        });
-        
-        usernameInput.addEventListener('input', function(e) {
-            e.target.dataset.userTyped = 'true';
-        });
-    }
-    
-    if (passwordInput) {
-        passwordInput.addEventListener('focus', function(e) {
-            if (e.target.value && !e.target.dataset.userTyped) {
-                e.target.value = '';
-            }
-        });
-        
-        passwordInput.addEventListener('input', function(e) {
-            e.target.dataset.userTyped = 'true';
-        });
-    }
-});
-
-// ============================================
-// LOGIN FORM HANDLER
-// ============================================
+// ---------------- Login ----------------
 document.getElementById("loginForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -96,12 +22,12 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
   submitBtn.textContent = "Logging in...";
 
   try {
-    console.log('🔄 Attempting login...');
+    console.log('ðŸ“„ Attempting login...');
     const response = await apiClient.login(username, password);
-    console.log('📥 Login response:', response);
+    console.log('ðŸ“¥ Login response:', response);
 
     if (response.success) {
-      console.log('✅ Login successful!');
+      console.log('âœ… Login successful!');
       
       // CORRECTED: api-client spreads backend data directly into response (no .data nesting)
       // Backend sends: { success: true, token: "...", user: {...}, redirectPath: "..." }
@@ -109,34 +35,27 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
       
       // Check if we have the token and user data
       if (!response.token || !response.user) {
-        console.error('❌ Invalid response structure:', response);
+        console.error('âŒ Invalid response structure:', response);
         throw new Error('Invalid server response. Please try again.');
       }
       
-      // SECURITY: Store authentication data in sessionStorage (more secure)
-      // sessionStorage is cleared when tab closes, localStorage persists
+      // Save authentication data
       apiClient.setToken(response.token);
-      sessionStorage.setItem("user", JSON.stringify(response.user));
-      sessionStorage.setItem("currentUser", JSON.stringify(response.user)); // For compatibility
-      
-      // Also store in localStorage for persistent sessions if needed
-      // Comment these out if you want session to end when browser closes
       localStorage.setItem("user", JSON.stringify(response.user));
-      localStorage.setItem("currentUser", JSON.stringify(response.user));
+      localStorage.setItem("currentUser", JSON.stringify(response.user)); // For compatibility
       
-      console.log('👤 User data:', response.user);
-      console.log('🎭 User role:', response.user.role);
+      console.log('ðŸ‘¤ User data:', response.user);
+      console.log('ðŸŽ­ User role:', response.user.role);
 
       // Show success message
       customAlert.success("Login successful!");
 
       // Handle password change requirement FIRST (takes priority)
       if (response.user.requirePasswordChange) {
-        console.log('⚠️ Password change required - redirecting to change password page...');
+        console.log('âš ï¸ Password change required - redirecting to change password page...');
         setTimeout(() => {
-          console.log('🔄 Redirecting to change password');
-          // SECURITY: Use replace() to prevent back button navigation
-          window.location.replace("/ChangePassword.html");
+          console.log('ðŸ”„ Redirecting to change password');
+          window.location.href = "/ChangePassword.html";
         }, 1200);
         return;
       }
@@ -145,19 +64,18 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
       const redirectPath = response.redirectPath;
       const userRole = response.user.role;
       
-      console.log('🎯 User role:', userRole);
-      console.log('🚀 Redirect path from backend:', redirectPath);
+      console.log('ðŸŽ¯ User role:', userRole);
+      console.log('ðŸš€ Redirect path from backend:', redirectPath);
 
       // Validate that we received a valid redirect path
       if (!redirectPath) {
-        console.error('❌ No redirect path received from backend!');
+        console.error('âŒ No redirect path received from backend!');
         throw new Error('Invalid role configuration. Please contact administrator.');
       }
 
       setTimeout(() => {
-        console.log('✅ Redirecting to:', redirectPath);
-        // SECURITY: Use replace() to prevent back button from returning to login page
-        window.location.replace(redirectPath);
+        console.log('âœ… Redirecting to:', redirectPath);
+        window.location.href = redirectPath;
       }, 1200);
       return;
     }
@@ -166,22 +84,17 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
     throw new Error(response.message || response.error || "Invalid username or password.");
     
   } catch (error) {
-    console.error("❌ Login error:", error);
+    console.error("âŒ Login error:", error);
     customAlert.error(error.message || "Login failed. Please check your credentials.");
     errorMessage.textContent = error.message || "Login failed. Please check your credentials.";
     errorMessage.style.display = "block";
-
-    // SECURITY: Clear password field after failed login
-    document.getElementById("password").value = "";
 
     submitBtn.disabled = false;
     submitBtn.textContent = "Login";
   }
 });
 
-// ============================================
-// FORGOT PASSWORD MODAL
-// ============================================
+// ---------------- Forgot Password ----------------
 const forgotPasswordLink = document.getElementById("forgotPasswordLink");
 const forgotModal = document.getElementById("forgotPasswordModal");
 const closeModal = forgotModal.querySelector(".close");
