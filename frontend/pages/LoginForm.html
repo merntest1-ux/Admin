@@ -101,159 +101,208 @@
     <!-- ============================================ -->
     <script>
         // LOGIN PAGE SECURITY - Prevent Back Button Issues & Form Cache
-        (function() {
-            'use strict';
+(function() {
+    'use strict';
+    
+    console.log('🔒 Initializing login page security...');
+    
+    // ============================================
+    // 1. Check Authentication Status
+    // ============================================
+    function checkAuthenticationStatus() {
+        try {
+            // Check if user just logged out
+            const justLoggedOut = sessionStorage.getItem('justLoggedOut');
             
-            console.log('🔒 Initializing login page security...');
+            // Check if user has valid token (shouldn't be on login page)
+            const token = localStorage.getItem('token') || 
+                         sessionStorage.getItem('token') ||
+                         localStorage.getItem('authToken') ||
+                         sessionStorage.getItem('authToken');
             
-            // ============================================
-            // 1. Check Authentication Status
-            // ============================================
-            function checkAuthenticationStatus() {
-                try {
-                    // Check if user just logged out
-                    const justLoggedOut = sessionStorage.getItem('justLoggedOut');
-                    
-                    // Check if user has valid token (shouldn't be on login page)
-                    const token = localStorage.getItem('token') || 
-                                 sessionStorage.getItem('token') ||
-                                 localStorage.getItem('authToken') ||
-                                 sessionStorage.getItem('authToken');
-                    
-                    // If user has valid token and didn't just logout, redirect to dashboard
-                    if (token && !justLoggedOut) {
-                        console.log('⚠️ User already authenticated, redirecting to dashboard...');
-                        // ✅ FIXED: Dashboard.html is in the SAME folder as LoginForm.html
-                        window.location.replace('./Dashboard.html');
-                        return;
-                    }
-                    
-                    // Clear the logout flag after checking
-                    if (justLoggedOut) {
-                        console.log('✅ Logout flag cleared');
-                        sessionStorage.removeItem('justLoggedOut');
-                    }
-                    
-                } catch (e) {
-                    console.error('Auth check error:', e);
-                }
-            }
-            
-            // ============================================
-            // 2. Clear All Login Form Data
-            // ============================================
-            function clearLoginForm() {
-                try {
-                    console.log('🧹 Clearing login form data...');
-                    
-                    // Clear all text and password inputs
-                    const inputs = document.querySelectorAll('input[type="text"], input[type="password"], input[type="email"]');
-                    inputs.forEach(input => {
-                        input.value = '';
-                    });
-                    
-                    // Clear remember me checkbox
-                    const rememberCheckbox = document.querySelector('input[type="checkbox"]');
-                    if (rememberCheckbox) {
-                        rememberCheckbox.checked = false;
-                    }
-                    
-                    // Hide all error and success messages
-                    const errorMessage = document.getElementById('errorMessage');
-                    const successMessage = document.getElementById('successMessage');
-                    
-                    if (errorMessage) {
-                        errorMessage.style.display = 'none';
-                        errorMessage.textContent = '';
-                    }
-                    
-                    if (successMessage) {
-                        successMessage.style.display = 'none';
-                        successMessage.textContent = '';
-                    }
-                    
-                    // Remove any custom alert overlays
-                    const overlays = document.querySelectorAll('.custom-alert-overlay, #thankYouOverlay, [id*="Overlay"], [class*="overlay"]');
-                    overlays.forEach(overlay => {
-                        overlay.remove();
-                    });
-                    
-                    // Clear any other alerts or notifications
-                    const alerts = document.querySelectorAll('.alert, .notification, .success-box, .error-box[style*="display: block"]');
-                    alerts.forEach(alert => {
-                        alert.style.display = 'none';
-                        alert.textContent = '';
-                    });
-                    
-                    console.log('✅ Form cleared successfully');
-                    
-                } catch (e) {
-                    console.error('Form clear error:', e);
-                }
-            }
-            
-            // ============================================
-            // 3. Prevent Browser Cache (BFCache)
-            // ============================================
-            function preventBFCache() {
-                // This prevents the page from being loaded from cache when using back button
-                window.addEventListener('pageshow', function(event) {
-                    // If page is loaded from cache (persisted = true)
-                    if (event.persisted) {
-                        console.log('⚠️ Page loaded from browser cache (back button pressed)');
-                        clearLoginForm();
-                        checkAuthenticationStatus();
+            // If user has valid token and didn't just logout, redirect based on role
+            if (token && !justLoggedOut) {
+                console.log('⚠️ User already authenticated, checking role for redirect...');
+                
+                // Get user data from storage
+                const userDataStr = localStorage.getItem('user') || 
+                                   sessionStorage.getItem('user') ||
+                                   localStorage.getItem('currentUser') ||
+                                   sessionStorage.getItem('currentUser');
+                
+                if (userDataStr) {
+                    try {
+                        const userData = JSON.parse(userDataStr);
+                        const userRole = userData.role;
                         
-                        // Force reload to get fresh page
-                        window.location.reload();
+                        console.log('👤 Found user role:', userRole);
+                        
+                        // Redirect based on role
+                        let redirectPath;
+                        switch(userRole) {
+                            case 'admin':
+                                redirectPath = './admin/AdminDashboard.html';
+                                break;
+                            case 'teacher':
+                                redirectPath = './teacher/TeacherDashboard.html';
+                                break;
+                            case 'student':
+                                redirectPath = './student/StudentDashboard.html';
+                                break;
+                            default:
+                                // Fallback to generic dashboard
+                                redirectPath = './Dashboard.html';
+                                console.warn('⚠️ Unknown role, using default dashboard');
+                        }
+                        
+                        console.log('🚀 Redirecting to:', redirectPath);
+                        window.location.replace(redirectPath);
+                        return;
+                        
+                    } catch (parseError) {
+                        console.error('Error parsing user data:', parseError);
+                        // If we can't parse user data, clear token and let them login again
+                        localStorage.removeItem('token');
+                        sessionStorage.removeItem('token');
+                        localStorage.removeItem('authToken');
+                        sessionStorage.removeItem('authToken');
                     }
-                });
-                
-                // Clear data when leaving page
-                window.addEventListener('pagehide', function() {
-                    clearLoginForm();
-                });
+                } else {
+                    console.warn('⚠️ Token exists but no user data found, clearing token');
+                    // Token exists but no user data - clear token
+                    localStorage.removeItem('token');
+                    sessionStorage.removeItem('token');
+                    localStorage.removeItem('authToken');
+                    sessionStorage.removeItem('authToken');
+                }
             }
             
-            // ============================================
-            // 4. Handle Browser Back Button
-            // ============================================
-            function handleBackButton() {
-                // Push a state to prevent back navigation
-                history.pushState(null, null, location.href);
-                
-                window.addEventListener('popstate', function() {
-                    // Push state again to stay on login page
-                    history.pushState(null, null, location.href);
-                    
-                    // Clear form and check authentication
-                    clearLoginForm();
-                    checkAuthenticationStatus();
-                });
+            // Clear the logout flag after checking
+            if (justLoggedOut) {
+                console.log('✅ Logout flag cleared');
+                sessionStorage.removeItem('justLoggedOut');
             }
             
-            // ============================================
-            // 5. Initialize Security on Page Load
-            // ============================================
-            function initializeSecurity() {
-                console.log('🔒 Login page security initialized');
+        } catch (e) {
+            console.error('Auth check error:', e);
+        }
+    }
+    
+    // ============================================
+    // 2. Clear All Login Form Data
+    // ============================================
+    function clearLoginForm() {
+        try {
+            console.log('🧹 Clearing login form data...');
+            
+            // Clear all text and password inputs
+            const inputs = document.querySelectorAll('input[type="text"], input[type="password"], input[type="email"]');
+            inputs.forEach(input => {
+                input.value = '';
+            });
+            
+            // Clear remember me checkbox
+            const rememberCheckbox = document.querySelector('input[type="checkbox"]');
+            if (rememberCheckbox) {
+                rememberCheckbox.checked = false;
+            }
+            
+            // Hide all error and success messages
+            const errorMessage = document.getElementById('errorMessage');
+            const successMessage = document.getElementById('successMessage');
+            
+            if (errorMessage) {
+                errorMessage.style.display = 'none';
+                errorMessage.textContent = '';
+            }
+            
+            if (successMessage) {
+                successMessage.style.display = 'none';
+                successMessage.textContent = '';
+            }
+            
+            // Remove any custom alert overlays
+            const overlays = document.querySelectorAll('.custom-alert-overlay, #thankYouOverlay, [id*="Overlay"], [class*="overlay"]');
+            overlays.forEach(overlay => {
+                overlay.remove();
+            });
+            
+            // Clear any other alerts or notifications
+            const alerts = document.querySelectorAll('.alert, .notification, .success-box, .error-box[style*="display: block"]');
+            alerts.forEach(alert => {
+                alert.style.display = 'none';
+                alert.textContent = '';
+            });
+            
+            console.log('✅ Form cleared successfully');
+            
+        } catch (e) {
+            console.error('Form clear error:', e);
+        }
+    }
+    
+    // ============================================
+    // 3. Prevent Browser Cache (BFCache)
+    // ============================================
+    function preventBFCache() {
+        // This prevents the page from being loaded from cache when using back button
+        window.addEventListener('pageshow', function(event) {
+            // If page is loaded from cache (persisted = true)
+            if (event.persisted) {
+                console.log('⚠️ Page loaded from browser cache (back button pressed)');
                 clearLoginForm();
-                preventBFCache();
-                handleBackButton();
+                checkAuthenticationStatus();
+                
+                // Force reload to get fresh page
+                window.location.reload();
             }
+        });
+        
+        // Clear data when leaving page
+        window.addEventListener('pagehide', function() {
+            clearLoginForm();
+        });
+    }
+    
+    // ============================================
+    // 4. Handle Browser Back Button
+    // ============================================
+    function handleBackButton() {
+        // Push a state to prevent back navigation
+        history.pushState(null, null, location.href);
+        
+        window.addEventListener('popstate', function() {
+            // Push state again to stay on login page
+            history.pushState(null, null, location.href);
             
-            // Run authentication check immediately (before DOM loads)
+            // Clear form and check authentication
+            clearLoginForm();
             checkAuthenticationStatus();
-            
-            // Initialize security features when DOM is ready
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', initializeSecurity);
-            } else {
-                // DOM already loaded
-                initializeSecurity();
-            }
-            
-        })();
+        });
+    }
+    
+    // ============================================
+    // 5. Initialize Security on Page Load
+    // ============================================
+    function initializeSecurity() {
+        console.log('🔒 Login page security initialized');
+        clearLoginForm();
+        preventBFCache();
+        handleBackButton();
+    }
+    
+    // Run authentication check immediately (before DOM loads)
+    checkAuthenticationStatus();
+    
+    // Initialize security features when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeSecurity);
+    } else {
+        // DOM already loaded
+        initializeSecurity();
+    }
+    
+})();
     </script>
 
     <!-- API Client + Alert + Login JS -->
@@ -279,3 +328,4 @@
 
 </body>
 </html>
+
