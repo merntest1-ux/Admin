@@ -100,7 +100,8 @@ function clearAllClientData() {
       'user',
       'userData',
       'session',
-      'sessionId'
+      'sessionId',
+      'currentUser'  // ✅ FIXED: Added currentUser
     ];
     
     // Clear localStorage
@@ -110,6 +111,9 @@ function clearAllClientData() {
     
     // Clear sessionStorage completely
     sessionStorage.clear();
+    
+    // ✅ FIXED: Set logout flag AFTER clearing sessionStorage
+    sessionStorage.setItem('justLoggedOut', 'true');
     
     // Clear in-memory token
     if (window.authToken) {
@@ -137,13 +141,6 @@ function clearAuthCookies() {
 }
 
 function showThankYouAndRedirect() {
-  // Set logout flag in sessionStorage to prevent back button access
-  try {
-    sessionStorage.setItem('justLoggedOut', 'true');
-  } catch (e) {
-    console.error('Could not set logout flag:', e);
-  }
-  
   // Create thank you overlay
   const thankYouHTML = `
     <div id="thankYouOverlay" style="
@@ -202,6 +199,7 @@ function showThankYouAndRedirect() {
   
   // Redirect to login page after 2 seconds
   setTimeout(() => {
+    // TODO: UPDATE THIS PATH TO YOUR LoginForm.html LOCATION
     // Use replace to prevent back button from returning to authenticated page
     window.location.replace('../../pages/LoginForm.html');
   }, 2000);
