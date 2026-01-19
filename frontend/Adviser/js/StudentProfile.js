@@ -448,9 +448,6 @@ function resetAddStudentForm() {
   addStudentGrade.disabled = true;
 }
 
-// Bulk Upload Modal
-bulkUploadBtn.addEventListener('click', () => {
-
   // Bulk Upload Modal
   bulkUploadBtn.addEventListener('click', () => {
     uploadModal.style.display = 'block';
