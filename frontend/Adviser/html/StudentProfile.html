@@ -77,8 +77,8 @@
             Welcome, <span id="adviserName">Adviser</span>!
           </h2>
           <p class="welcome-description">
-            Manage your students below. You can upload a student list using Excel/CSV files or view existing students.
-          </p>
+  Manage your students below. You can add students individually or upload a student list using Excel/CSV files.
+</p>
         </div>
       </div>
     </section>
@@ -97,6 +97,10 @@
           <select id="gradeFilter">
             <option value="">All Grades</option>
           </select>
+<button id="addStudentBtn" class="add-student-btn">
+    	<span class="material-symbols-outlined">person_add</span>Add Student
+ 	 </button>
+  <button id="bulkUploadBtn" class="add-student-btn">
           <button id="bulkUploadBtn" class="add-student-btn">
             <span class="material-symbols-outlined">upload_file</span>
             Bulk Upload Students
@@ -206,6 +210,84 @@
       </div>
     </div>
   </div>
+
+<!-- Add Student Modal -->
+<div id="addStudentModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>
+        <span class="material-symbols-outlined">person_add</span>
+        Add New Student
+      </h2>
+      <span class="close" id="closeAddStudentModal">&times;</span>
+    </div>
+    <div class="modal-body">
+      <form id="addStudentForm" class="referral-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="addStudentId">Student ID *</label>
+            <input type="text" id="addStudentId" name="studentId" placeholder="e.g., 2024-001" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="addStudentFirstName">First Name *</label>
+            <input type="text" id="addStudentFirstName" name="firstName" placeholder="First name" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="addStudentMiddleName">Middle Name</label>
+            <input type="text" id="addStudentMiddleName" name="middleName" placeholder="Middle name (optional)">
+          </div>
+
+          <div class="form-group">
+            <label for="addStudentLastName">Last Name *</label>
+            <input type="text" id="addStudentLastName" name="lastName" placeholder="Last name" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="addStudentLevel">Level *</label>
+            <select id="addStudentLevel" name="level" required>
+              <option value="">Select Level</option>
+              <option value="Elementary">Elementary</option>
+              <option value="JHS">Junior High School</option>
+              <option value="SHS">Senior High School</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="addStudentGrade">Grade *</label>
+            <select id="addStudentGrade" name="grade" required disabled>
+              <option value="">Select Grade</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="addStudentContact">Contact Number *</label>
+            <input type="tel" id="addStudentContact" name="contactNumber" placeholder="e.g., 09171234567" required>
+          </div>
+        </div>
+
+        <div class="info-box" style="background: rgba(16, 185, 129, 0.1); padding: 12px; border-radius: 8px; margin-bottom: 1rem; border: 1px solid rgba(16, 185, 129, 0.3);">
+          <p style="margin: 0; color: #10b981; font-size: 0.9rem;">
+            ℹ️ <strong>Note:</strong> This student will be automatically assigned to you as their adviser.
+          </p>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" id="cancelAddStudentBtn">Cancel</button>
+          <button type="submit" class="btn-primary">
+            <span class="material-symbols-outlined">person_add</span>
+            Add Student
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 
   <!-- Add Referral Modal -->
   <div id="referralModal" class="modal">
