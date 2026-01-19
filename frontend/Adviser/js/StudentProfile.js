@@ -24,8 +24,10 @@ document.addEventListener('DOMContentLoaded', async function() {
   const gradeFilter = document.getElementById('gradeFilter');
   const studentCount = document.getElementById('studentCount');
   const bulkUploadBtn = document.getElementById('bulkUploadBtn');
-  const uploadModal = document.getElementById('uploadModal');
-  const resultsModal = document.getElementById('resultsModal');
+const addStudentBtn = document.getElementById('addStudentBtn');  // ADD THIS
+const uploadModal = document.getElementById('uploadModal');
+const resultsModal = document.getElementById('resultsModal');
+const addStudentModal = document.getElementById('addStudentModal');  // ADD THIS
   const dropZone = document.getElementById('dropZone');
   const fileInput = document.getElementById('fileInput');
   const fileInfo = document.getElementById('fileInfo');
@@ -245,10 +247,10 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   // Display students in table
   function displayStudents(students) {
-    if (students.length === 0) {
-      studentTable.innerHTML = '<tr><td colspan="6" style="text-align:center; color: #6b7280;">No students found. Click "Bulk Upload Students" to add your students.</td></tr>';
-      return;
-    }
+  if (students.length === 0) {
+    studentTable.innerHTML = '<tr><td colspan="6" style="text-align:center; color: #6b7280;">No students found. Click "Add Student" or "Bulk Upload Students" to add your students.</td></tr>';
+    return;
+  }
 
     studentTable.innerHTML = students.map(student => {
       const fullName = student.fullName || 
@@ -325,6 +327,130 @@ document.addEventListener('DOMContentLoaded', async function() {
   searchInput.addEventListener('input', filterStudents);
   gradeFilter.addEventListener('change', filterStudents);
 
+// Event listeners for filters
+searchInput.addEventListener('input', filterStudents);
+gradeFilter.addEventListener('change', filterStudents);
+
+// --------------------------
+// ADD STUDENT MODAL HANDLERS
+// --------------------------
+
+// Open Add Student Modal
+addStudentBtn.addEventListener('click', () => {
+  addStudentModal.style.display = 'block';
+  resetAddStudentForm();
+});
+
+// Close Add Student Modal
+const closeAddStudentModal = document.getElementById('closeAddStudentModal');
+const cancelAddStudentBtn = document.getElementById('cancelAddStudentBtn');
+
+closeAddStudentModal.addEventListener('click', () => {
+  addStudentModal.style.display = 'none';
+  resetAddStudentForm();
+});
+
+cancelAddStudentBtn.addEventListener('click', () => {
+  addStudentModal.style.display = 'none';
+  resetAddStudentForm();
+});
+
+// Handle Add Student Form Level Change
+const addStudentLevel = document.getElementById('addStudentLevel');
+const addStudentGrade = document.getElementById('addStudentGrade');
+
+addStudentLevel.addEventListener('change', function() {
+  const level = this.value;
+  addStudentGrade.innerHTML = '<option value="">Select Grade</option>';
+  
+  if (level && gradeMappings[level]) {
+    const grades = gradeMappings[level];
+    grades.forEach(grade => {
+      const option = document.createElement('option');
+      option.value = `Grade ${grade}`;
+      option.textContent = `Grade ${grade}`;
+      addStudentGrade.appendChild(option);
+    });
+    addStudentGrade.disabled = false;
+  } else {
+    addStudentGrade.disabled = true;
+  }
+});
+
+// Handle Add Student Form Submission
+const addStudentForm = document.getElementById('addStudentForm');
+
+addStudentForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const formData = {
+    studentId: document.getElementById('addStudentId').value.trim(),
+    firstName: document.getElementById('addStudentFirstName').value.trim(),
+    middleName: document.getElementById('addStudentMiddleName').value.trim() || undefined,
+    lastName: document.getElementById('addStudentLastName').value.trim(),
+    level: document.getElementById('addStudentLevel').value,
+    grade: document.getElementById('addStudentGrade').value,
+    contactNumber: document.getElementById('addStudentContact').value.trim()
+  };
+
+  console.log('📤 Adding new student:', formData);
+
+  try {
+    const submitBtn = addStudentForm.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="material-symbols-outlined">hourglass_empty</span> Adding...';
+    
+    const response = await apiClient.post('/students', formData);
+    
+    console.log('📥 Response:', response);
+    
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = originalText;
+    
+    if (response.success) {
+      console.log('✅ Student added successfully!');
+      
+      addStudentModal.style.display = 'none';
+      resetAddStudentForm();
+      
+      if (typeof customAlert !== 'undefined' && customAlert.success) {
+        customAlert.success('Student has been added successfully!', 'Success!');
+      } else {
+        alert('✅ Student added successfully! 🎉');
+      }
+      
+      loadStudents();
+    } else {
+      throw new Error(response.error || response.message || 'Failed to add student');
+    }
+  } catch (error) {
+    console.error('❌ Error adding student:', error);
+    
+    const submitBtn = addStudentForm.querySelector('button[type="submit"]');
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<span class="material-symbols-outlined">person_add</span>Add Student';
+    }
+    
+    const errorMsg = error.message || 'Failed to add student';
+    if (typeof customAlert !== 'undefined' && customAlert.error) {
+      customAlert.error(errorMsg, 'Error!');  
+    } else {
+      alert('❌ Error: ' + errorMsg);
+    }
+  }
+});
+
+function resetAddStudentForm() {
+  addStudentForm.reset();
+  addStudentGrade.innerHTML = '<option value="">Select Grade</option>';
+  addStudentGrade.disabled = true;
+}
+
+// Bulk Upload Modal
+bulkUploadBtn.addEventListener('click', () => {
+
   // Bulk Upload Modal
   bulkUploadBtn.addEventListener('click', () => {
     uploadModal.style.display = 'block';
@@ -349,16 +475,20 @@ document.addEventListener('DOMContentLoaded', async function() {
     resultsModal.style.display = 'none';
   });
 
-  // Click outside to close
-  window.addEventListener('click', (e) => {
-    if (e.target === uploadModal) {
-      uploadModal.style.display = 'none';
-      resetUploadModal();
-    }
-    if (e.target === resultsModal) {
-      resultsModal.style.display = 'none';
-    }
-  });
+ // Click outside to close
+window.addEventListener('click', (e) => {
+  if (e.target === uploadModal) {
+    uploadModal.style.display = 'none';
+    resetUploadModal();
+  }
+  if (e.target === resultsModal) {
+    resultsModal.style.display = 'none';
+  }
+  if (e.target === addStudentModal) {  // ADD THIS ENTIRE BLOCK
+    addStudentModal.style.display = 'none';
+    resetAddStudentForm();
+  }
+});
 
   // Drop zone functionality
   // Drop zone functionality
