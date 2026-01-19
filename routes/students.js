@@ -164,8 +164,8 @@ router.get("/:id", auth, async (req, res) => {
   }
 })
 
-// CREATE new student (Admin, Counselor only)
-router.post("/", auth, authorizeRoles("Admin", "Counselor"), async (req, res) => {
+// CREATE new student (Admin, Counselor, Teacher) - FIXED TO ALLOW TEACHERS
+router.post("/", auth, authorizeRoles("Admin", "Counselor", "Teacher"), async (req, res) => {
   try {
     const {
       studentId,
@@ -204,6 +204,9 @@ router.post("/", auth, authorizeRoles("Admin", "Counselor"), async (req, res) =>
       return res.status(400).json({ success: false, error: 'Duplicate student exists' });
     }
     
+    // ✅ If user is a teacher, automatically set adviser to their name
+    const finalAdviser = req.user.role === "Teacher" ? req.user.fullName : adviser;
+    
     const student = new Student({
       studentId,
       firstName,
@@ -218,7 +221,7 @@ router.post("/", auth, authorizeRoles("Admin", "Counselor"), async (req, res) =>
       guardianContact,
       address,
       dateOfBirth,
-      adviser,
+      adviser: finalAdviser,
       medicalNotes,
       academicNotes,
       behavioralNotes
