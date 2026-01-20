@@ -11,6 +11,7 @@ const userSchema = new mongoose.Schema({
   role: { type: String, enum: ['Admin', 'Teacher', 'Counselor'], required: true },
   department: { type: String },
   isActive: { type: Boolean, default: true },
+  isArchived: { type: Boolean, default: false },
   requirePasswordChange: { type: Boolean, default: true },
   createdAt: { type: Date, default: Date.now },
   lastLogin: { type: Date }
