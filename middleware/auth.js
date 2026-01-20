@@ -77,6 +77,15 @@ const auth = async (req, res, next) => {
     console.log("12. User found:", user.username);
     console.log("13. User role:", user.role); // Added to see actual role
 
+    // ✅ ADD THIS CHECK FIRST
+    if (user.isArchived) {
+      console.log("❌ User account is archived:", user.username);
+      return res.status(403).json({
+        success: false,
+        error: "This account has been archived. Please contact an administrator."
+      });
+    }
+    
     if (!user.isActive) {
       console.log("❌ User account is deactivated:", user.username);
       return res.status(401).json({
@@ -84,7 +93,7 @@ const auth = async (req, res, next) => {
         error: "User account is deactivated."
       });
     }
-
+    
     console.log("✅ Authentication successful for:", user.username);
     console.log("=== AUTH DEBUG END ===\n");
 
