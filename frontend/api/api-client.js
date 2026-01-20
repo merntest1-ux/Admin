@@ -189,8 +189,19 @@ class APIClient {
     return this.put(`/users/${userId}/reset-password`, { newPassword }); 
   }
   
-  async deleteUser(userId) { 
-    return this.delete(`/users/${userId}`); 
+  // ❌ DELETE DISABLED - Use Archive/Restore instead
+  // async deleteUser(userId) { 
+  //   return this.delete(`/users/${userId}`); 
+  // }
+  
+  // ✅ Archive user (replaces delete)
+  async archiveUser(userId) {
+    return this.put(`/users/${userId}/archive`, {});
+  }
+  
+  // ✅ Restore archived user
+  async restoreUser(userId) {
+    return this.put(`/users/${userId}/restore`, {});
   }
   
   // ============================================
