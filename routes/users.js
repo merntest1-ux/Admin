@@ -104,7 +104,11 @@ router.post("/create", auth, authorizeRoles("Admin"), async (req, res) => {
 // ============================
 router.get("/", auth, authorizeRoles("Admin"), async (req, res) => {
   try {
-    const users = await User.find().select("-password").sort({ createdAt: -1 });
+    // ✅ Sort by archived status first (active users first), then by creation date
+    const users = await User.find()
+      .select("-password")
+      .sort({ isArchived: 1, createdAt: -1 });
+    
     res.json({ success: true, data: users });
   } catch (error) {
     console.error("Error fetching users:", error);
@@ -196,6 +200,87 @@ router.put("/:id/reset-password", auth, authorizeRoles("Admin"), async (req, res
 });
 
 // ============================
+// ARCHIVE USER (Admin only)
+// ============================
+router.put("/:id/archive", auth, authorizeRoles("Admin"), async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    
+    if (!user) {
+      return res.status(404).json({ 
+        success: false, 
+        error: "User not found" 
+      });
+    }
+
+    // Prevent archiving own account
+    if (user._id.toString() === req.user._id.toString()) {
+      return res.status(400).json({ 
+        success: false, 
+        error: "You cannot archive your own account" 
+      });
+    }
+
+    // Archive user and deactivate
+    user.isArchived = true;
+    user.isActive = false;
+    await user.save();
+
+    res.json({ 
+      success: true, 
+      message: "User archived successfully",
+      data: user 
+    });
+  } catch (error) {
+    console.error("Error archiving user:", error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message 
+    });
+  }
+});
+
+// ============================
+// RESTORE USER (Admin only)
+// ============================
+router.put("/:id/restore", auth, authorizeRoles("Admin"), async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    
+    if (!user) {
+      return res.status(404).json({ 
+        success: false, 
+        error: "User not found" 
+      });
+    }
+
+    if (!user.isArchived) {
+      return res.status(400).json({ 
+        success: false, 
+        error: "User is not archived" 
+      });
+    }
+
+    // Restore user and reactivate
+    user.isArchived = false;
+    user.isActive = true;
+    await user.save();
+
+    res.json({ 
+      success: true, 
+      message: "User restored successfully",
+      data: user 
+    });
+  } catch (error) {
+    console.error("Error restoring user:", error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message 
+    });
+  }
+});
+
+/*// ============================
 // DELETE USER (Admin only)
 // ============================
 router.delete("/:id", auth, authorizeRoles("Admin"), async (req, res) => {
@@ -214,7 +299,7 @@ router.delete("/:id", auth, authorizeRoles("Admin"), async (req, res) => {
     console.error("Error deleting user:", error);
     res.status(500).json({ success: false, error: error.message });
   }
-});
+});*/
 
 // ============================
 // UPDATE USER (Admin or own profile)
