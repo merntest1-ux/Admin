@@ -1359,4 +1359,131 @@ body {
 
 .hidden { display: none; }
 
+/* ============================================
+   ARCHIVE STATUS BADGE
+   ============================================ */
+.badge-archived {
+  background: linear-gradient(135deg, rgba(115, 115, 115, 0.1) 0%, rgba(115, 115, 115, 0.05) 100%);
+  color: var(--color-gray-600);
+  border: 1px solid rgba(115, 115, 115, 0.2);
+}
+
+.status-archived {
+  color: var(--color-gray-500);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* ============================================
+   ARCHIVED ROW STYLING
+   ============================================ */
+.users-table tr.archived-row {
+  background-color: rgba(0, 0, 0, 0.02);
+  opacity: 0.7;
+}
+
+.users-table tr.archived-row:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+/* ============================================
+   FILTER TABS FOR ARCHIVED USERS
+   ============================================ */
+.filter-tabs {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
+  border-bottom: 2px solid var(--color-gray-200);
+  padding-bottom: 0;
+}
+
+.filter-tab {
+  background: none;
+  border: none;
+  padding: var(--spacing-md) var(--spacing-lg);
+  cursor: pointer;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-gray-600);
+  border-bottom: 3px solid transparent;
+  transition: all var(--transition-base);
+  font-family: inherit;
+  font-size: var(--font-size-base);
+  position: relative;
+  margin-bottom: -2px;
+}
+
+.filter-tab:hover {
+  color: var(--color-primary);
+  background-color: rgba(30, 69, 40, 0.05);
+}
+
+.filter-tab.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+  font-weight: var(--font-weight-bold);
+}
+
+.filter-tab .tab-count {
+  display: inline-block;
+  margin-left: var(--spacing-sm);
+  padding: 2px 8px;
+  background-color: var(--color-gray-200);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  min-width: 24px;
+  text-align: center;
+}
+
+.filter-tab.active .tab-count {
+  background-color: var(--color-primary);
+  color: var(--color-white);
+}
+
+/* ============================================
+   ARCHIVE BUTTON STYLING
+   ============================================ */
+.btn-action.archive:hover {
+  background: linear-gradient(135deg, rgba(115, 115, 115, 0.1) 0%, rgba(115, 115, 115, 0.05) 100%);
+  color: var(--color-gray-700);
+}
+
+.btn-action.restore:hover {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%);
+  color: var(--color-success);
+}
+
+/* ============================================
+   RESPONSIVE FILTER TABS
+   ============================================ */
+@media (max-width: 768px) {
+  .filter-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .filter-tab {
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: var(--font-size-sm);
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .filter-tabs {
+    gap: 0;
+  }
+  
+  .filter-tab {
+    flex: 1;
+    text-align: center;
+    padding: var(--spacing-sm);
+    font-size: var(--font-size-xs);
+  }
+  
+  .filter-tab .tab-count {
+    display: block;
+    margin: 4px auto 0;
+  }
+}
+
 
