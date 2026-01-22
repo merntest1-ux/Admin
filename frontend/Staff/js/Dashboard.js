@@ -314,26 +314,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Display recent referrals in table
   function displayRecentReferrals(referrals) {
-    const tbody = document.getElementById('recentReferralsTable');
-    if (!tbody) return;
+  const tbody = document.getElementById('recentReferralsTable');
+  if (!tbody) return;
 
-    if (referrals.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No recent referrals</td></tr>';
-      return;
-    }
-
-    tbody.innerHTML = referrals.map(referral => `
-      <tr>
-        <td>${referral.referralId}</td>
-        <td>${referral.studentName}</td>
-        <td>${referral.level}</td>
-        <td>${referral.grade}</td>
-        <td>${new Date(referral.createdAt).toLocaleDateString()}</td>
-        <td><span class="status-badge status-${referral.status.replace(/\s+/g, '-').toLowerCase()}">${referral.status}</span></td>
-        <td><span class="severity-badge severity-${referral.severity.toLowerCase()}">${referral.severity}</span></td>
-      </tr>
-    `).join('');
+  if (referrals.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No recent referrals</td></tr>';
+    return;
   }
+
+  tbody.innerHTML = referrals.map(referral => `
+    <tr style="cursor: pointer;" onclick="window.location.href='Referral.html?id=${referral.referralId}'">
+      <td>${referral.referralId}</td>
+      <td>${referral.studentName}</td>
+      <td>${referral.level}</td>
+      <td>${referral.grade}</td>
+      <td>${new Date(referral.createdAt).toLocaleDateString()}</td>
+      <td><span class="status-badge status-${referral.status.replace(/\s+/g, '-').toLowerCase()}">${referral.status}</span></td>
+      <td><span class="severity-badge severity-${referral.severity.toLowerCase()}">${referral.severity}</span></td>
+    </tr>
+  `).join('');
+  
+  // ADD THIS LINE - Make table sortable after populating
+  makeTableSortable('recentReferralsTable');
+}
 
   async function loadRecentStudentSubmissions() {
     try {
@@ -368,26 +371,29 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function displayRecentStudentSubmissions(submissions) {
-    const tbody = document.getElementById('recentStudentTable');
-    if (!tbody) return;
+  const tbody = document.getElementById('recentStudentTable');
+  if (!tbody) return;
 
-    if (!submissions || submissions.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No Recent Student Submissions</td></tr>';
-      return;
-    }
-
-    tbody.innerHTML = submissions.map(submission => `
-      <tr style="cursor: pointer;" onclick="window.location.href='../html/StudentSubmissions.html?id=${submission.submissionId || submission.id}'">
-        <td>${submission.submissionId || submission.id || 'N/A'}</td>
-        <td>${submission.studentName || 'Unknown'}</td>
-        <td>${submission.level || 'N/A'}</td>
-        <td>${submission.grade || 'N/A'}</td>
-        <td>${new Date(submission.createdAt || submission.dateSubmitted).toLocaleDateString()}</td>
-        <td><span class="status-badge status-${(submission.status || 'pending').replace(/\s+/g, '-').toLowerCase()}">${submission.status || 'Pending'}</span></td>
-        <td><span class="severity-badge severity-${(submission.severity || 'medium').toLowerCase()}">${submission.severity || 'Medium'}</span></td>
-      </tr>
-    `).join('');
+  if (!submissions || submissions.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No Recent Student Submissions</td></tr>';
+    return;
   }
+
+  tbody.innerHTML = submissions.map(submission => `
+    <tr style="cursor: pointer;" onclick="window.location.href='StudentSubmissions.html?id=${submission.submissionId || submission.id}'">
+      <td>${submission.submissionId || submission.id || 'N/A'}</td>
+      <td>${submission.studentName || 'Unknown'}</td>
+      <td>${submission.level || 'N/A'}</td>
+      <td>${submission.grade || 'N/A'}</td>
+      <td>${new Date(submission.createdAt || submission.dateSubmitted).toLocaleDateString()}</td>
+      <td><span class="status-badge status-${(submission.status || 'pending').replace(/\s+/g, '-').toLowerCase()}">${submission.status || 'Pending'}</span></td>
+      <td><span class="severity-badge severity-${(submission.severity || 'medium').toLowerCase()}">${submission.severity || 'Medium'}</span></td>
+    </tr>
+  `).join('');
+  
+  // ADD THIS LINE - Make table sortable after populating
+  makeTableSortable('recentStudentTable');
+}
 
   // ========== LOAD REFERRAL STATISTICS ==========
   async function loadReferralStats() {
@@ -1886,5 +1892,136 @@ async function loadTopReferral() {
     };
 
 }
+
+// ... existing code ...
+
+async function loadTopReferral() {
+  // ... existing loadTopReferral code ...
+}
+
+// ========== ADD THIS ENTIRE SECTION HERE ==========
+// ========== TABLE SORTING FUNCTIONALITY ==========
+let currentSort = {
+  column: null,
+  direction: 'asc',
+  table: null
+};
+
+/**
+ * Makes a table sortable by adding click handlers to headers
+ * @param {string} tableId - ID of the table element
+ */
+function makeTableSortable(tableId) {
+  const table = document.getElementById(tableId);
+  if (!table) return;
+  
+  const headers = table.querySelectorAll('thead th');
+  
+  headers.forEach((header, index) => {
+    // Add sorting indicator
+    header.style.cursor = 'pointer';
+    header.style.userSelect = 'none';
+    header.style.position = 'relative';
+    
+    // Add click event
+    header.addEventListener('click', () => {
+      sortTable(tableId, index);
+    });
+    
+    // Add hover effect
+    header.addEventListener('mouseenter', () => {
+      header.style.backgroundColor = 'var(--color-beige)';
+    });
+    
+    header.addEventListener('mouseleave', () => {
+      header.style.backgroundColor = 'var(--color-beige-light)';
+    });
+  });
+}
+
+/**
+ * Sorts table by column index
+ * @param {string} tableId - ID of the table
+ * @param {number} columnIndex - Index of column to sort
+ */
+function sortTable(tableId, columnIndex) {
+  const table = document.getElementById(tableId);
+  if (!table) return;
+  
+  const tbody = table.querySelector('tbody');
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+  
+  // Skip if table is empty or has loading/error message
+  if (rows.length <= 1 && rows[0]?.cells.length === 1) return;
+  
+  // Determine sort direction
+  let direction = 'asc';
+  if (currentSort.table === tableId && currentSort.column === columnIndex) {
+    direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+  }
+  
+  // Sort rows
+  const sortedRows = rows.sort((a, b) => {
+    const aValue = a.cells[columnIndex]?.textContent.trim() || '';
+    const bValue = b.cells[columnIndex]?.textContent.trim() || '';
+    
+    // Try to parse as number
+    const aNum = parseFloat(aValue.replace(/[^0-9.-]/g, ''));
+    const bNum = parseFloat(bValue.replace(/[^0-9.-]/g, ''));
+    
+    let comparison = 0;
+    
+    // If both are valid numbers, compare numerically
+    if (!isNaN(aNum) && !isNaN(bNum)) {
+      comparison = aNum - bNum;
+    }
+    // Try to parse as date
+    else if (Date.parse(aValue) && Date.parse(bValue)) {
+      comparison = new Date(aValue) - new Date(bValue);
+    }
+    // Compare as strings
+    else {
+      comparison = aValue.localeCompare(bValue);
+    }
+    
+    return direction === 'asc' ? comparison : -comparison;
+  });
+  
+  // Update table
+  tbody.innerHTML = '';
+  sortedRows.forEach(row => tbody.appendChild(row));
+  
+  // Update sort indicators
+  updateSortIndicators(table, columnIndex, direction);
+  
+  // Save current sort state
+  currentSort = { table: tableId, column: columnIndex, direction };
+}
+
+/**
+ * Updates visual sort indicators on table headers
+ */
+function updateSortIndicators(table, activeColumn, direction) {
+  const headers = table.querySelectorAll('thead th');
+  
+  headers.forEach((header, index) => {
+    // Remove existing indicators
+    const existingIndicator = header.querySelector('.sort-indicator');
+    if (existingIndicator) {
+      existingIndicator.remove();
+    }
+    
+    // Add indicator to active column
+    if (index === activeColumn) {
+      const indicator = document.createElement('span');
+      indicator.className = 'sort-indicator';
+      indicator.style.marginLeft = '8px';
+      indicator.style.fontSize = '12px';
+      indicator.textContent = direction === 'asc' ? '▲' : '▼';
+      header.appendChild(indicator);
+    }
+  });
+}
+// ========== END OF SORTING FUNCTIONS ==========
 
 
