@@ -100,6 +100,13 @@
             <option value="Complete">Complete</option>
           </select>
 
+          <select id="urgencyFilter">
+            <option value="all">All Urgency</option>
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
+          </select>
+
            <button class="btn-add" id="addReferralBtn">+ Add Client Referral</button>
         </div>
 
@@ -113,6 +120,7 @@
                 <th>Level</th>
                 <th>Grade</th>
                 <th>Status</th>
+                <th>Urgency</th>
                 <th>Severity</th>
                 <th>Date</th>
                 <th>Actions</th>
@@ -185,7 +193,27 @@
             <input type="text" id="reason" name="reason" placeholder="e.g., Academic concerns, Behavioral issues" required>
           </div>
         </div>
-
+              
+        <div class="form-row">
+          <div class="form-group">
+            <label for="urgency">Urgency Level *</label>
+            <select id="urgency" name="urgency" required>
+              <option value="">Select urgency level</option>
+              <option value="Low">Low - Can wait, routine follow-up</option>
+              <option value="Medium">Medium - Needs attention soon</option>
+              <option value="High">High - Needs immediate action</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="info-box" style="background: #eff6ff; padding: 12px; border-radius: 8px; margin-bottom: 1rem; border-left: 4px solid #3b82f6;">
+          <p style="margin: 0; color: #1e40af; font-size: 0.9rem;">
+            ⏱️ <strong>Urgency:</strong> How fast action is needed by counselor/staff
+            <br>
+            📊 <strong>Severity:</strong> Will be assessed by counselor during review
+          </p>
+        </div>
+        
         <div class="form-group">
           <label for="description">Description</label>
           <textarea id="description" name="description" rows="4" placeholder="Detailed description of the concern..."></textarea>
@@ -272,12 +300,26 @@
             <input type="text" id="edit-status" name="status" readonly disabled>
           </div>
 
-          <div class="form-group">
-            <label for="edit-severity">Severity</label>
-            <input type="text" id="edit-severity" name="severity" readonly disabled>
-            <small class="severity-info" style="color: #666; font-size: 12px; margin-top: 4px; display: block;">
-              📊 Severity is assessed by counselor/staff during review
-            </small>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="edit-urgency">Urgency Level</label>
+              <select id="edit-urgency" name="urgency" required>
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+              </select>
+              <small style="color: #666; font-size: 12px; margin-top: 4px; display: block;">
+                ⏱️ How fast action is needed
+              </small>
+            </div>
+          
+            <div class="form-group">
+              <label for="edit-severity">Severity</label>
+              <input type="text" id="edit-severity" name="severity" readonly disabled>
+              <small class="severity-info" style="color: #666; font-size: 12px; margin-top: 4px; display: block;">
+                📊 Severity is assessed by counselor/staff during review
+              </small>
+            </div>
           </div>
 
           <div class="form-group" id="categorySection" style="display: none;">
