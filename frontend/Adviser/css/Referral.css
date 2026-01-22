@@ -309,6 +309,7 @@ body {
 
 #levelFilter,
 #severityFilter,
+#urgencyFilter,
 #GradeFilter,
 #statusFilter {
   cursor: pointer;
@@ -643,6 +644,34 @@ tr:nth-child(even) {
   background-color: rgba(239, 68, 68, 0.2);
   color: #ef4444;
   border: 1px solid #ef4444;
+}
+
+/* Urgency Badge Styles */
+.urgency-badge {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.urgency-high {
+  background-color: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  border: 1px solid #ef4444;
+}
+
+.urgency-medium {
+  background-color: rgba(251, 191, 36, 0.2);
+  color: #fbbf24;
+  border: 1px solid #fbbf24;
+}
+
+.urgency-low {
+  background-color: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+  border: 1px solid #10b981;
 }
 
 /* Date input styling */
