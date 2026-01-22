@@ -249,6 +249,8 @@ function displaySubmissions(submissions) {
       </tr>
     `;
   }).join('');
+
+  makeTableSortable('submissionsTableBody');
 }
 
 // Search functionality
@@ -855,3 +857,138 @@ style.textContent = `
   }
 `;
 document.head.appendChild(style);
+
+// ========== TABLE SORTING FUNCTIONALITY ==========
+let currentSortSubmissions = {
+  column: null,
+  direction: 'asc',
+  table: null
+};
+
+/**
+ * Makes a table sortable by adding click handlers to headers
+ * @param {string} tableBodyId - ID of the table body element
+ */
+function makeTableSortable(tableBodyId) {
+  const tbody = document.getElementById(tableBodyId);
+  if (!tbody) return;
+  
+  const table = tbody.closest('table');
+  if (!table) return;
+  
+  const headers = table.querySelectorAll('thead th');
+  
+  headers.forEach((header, index) => {
+    // Skip the Actions column (last column)
+    if (index === headers.length - 1) return;
+    
+    // Add sorting indicator
+    header.style.cursor = 'pointer';
+    header.style.userSelect = 'none';
+    header.style.position = 'relative';
+    
+    // Add click event
+    header.addEventListener('click', () => {
+      sortSubmissionsTable(tableBodyId, index);
+    });
+    
+    // Add hover effect
+    header.addEventListener('mouseenter', () => {
+      header.style.backgroundColor = 'rgba(16, 185, 129, 0.1)';
+    });
+    
+    header.addEventListener('mouseleave', () => {
+      header.style.backgroundColor = '';
+    });
+  });
+}
+
+/**
+ * Sorts table by column index
+ * @param {string} tableBodyId - ID of the table body
+ * @param {number} columnIndex - Index of column to sort
+ */
+function sortSubmissionsTable(tableBodyId, columnIndex) {
+  const tbody = document.getElementById(tableBodyId);
+  if (!tbody) return;
+  
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+  
+  // Skip if table is empty or has loading/error message
+  if (rows.length <= 1 && rows[0]?.cells.length === 1) return;
+  
+  // Determine sort direction
+  let direction = 'asc';
+  if (currentSortSubmissions.table === tableBodyId && currentSortSubmissions.column === columnIndex) {
+    direction = currentSortSubmissions.direction === 'asc' ? 'desc' : 'asc';
+  }
+  
+  // Sort rows
+  const sortedRows = rows.sort((a, b) => {
+    const aCell = a.cells[columnIndex];
+    const bCell = b.cells[columnIndex];
+    
+    if (!aCell || !bCell) return 0;
+    
+    // Get text content, stripping HTML tags for status/severity badges
+    const aValue = aCell.textContent.trim() || '';
+    const bValue = bCell.textContent.trim() || '';
+    
+    // Try to parse as number
+    const aNum = parseFloat(aValue.replace(/[^0-9.-]/g, ''));
+    const bNum = parseFloat(bValue.replace(/[^0-9.-]/g, ''));
+    
+    let comparison = 0;
+    
+    // If both are valid numbers, compare numerically
+    if (!isNaN(aNum) && !isNaN(bNum)) {
+      comparison = aNum - bNum;
+    }
+    // Try to parse as date
+    else if (Date.parse(aValue) && Date.parse(bValue)) {
+      comparison = new Date(aValue) - new Date(bValue);
+    }
+    // Compare as strings
+    else {
+      comparison = aValue.localeCompare(bValue);
+    }
+    
+    return direction === 'asc' ? comparison : -comparison;
+  });
+  
+  // Update table
+  tbody.innerHTML = '';
+  sortedRows.forEach(row => tbody.appendChild(row));
+  
+  // Update sort indicators
+  updateSubmissionsSortIndicators(tbody.closest('table'), columnIndex, direction);
+  
+  // Save current sort state
+  currentSortSubmissions = { table: tableBodyId, column: columnIndex, direction };
+}
+
+/**
+ * Updates visual sort indicators on table headers
+ */
+function updateSubmissionsSortIndicators(table, activeColumn, direction) {
+  const headers = table.querySelectorAll('thead th');
+  
+  headers.forEach((header, index) => {
+    // Remove existing indicators
+    const existingIndicator = header.querySelector('.sort-indicator');
+    if (existingIndicator) {
+      existingIndicator.remove();
+    }
+    
+    // Add indicator to active column
+    if (index === activeColumn) {
+      const indicator = document.createElement('span');
+      indicator.className = 'sort-indicator';
+      indicator.style.marginLeft = '8px';
+      indicator.style.fontSize = '12px';
+      indicator.style.color = '#10b981';
+      indicator.textContent = direction === 'asc' ? '▲' : '▼';
+      header.appendChild(indicator);
+    }
+  });
+}
