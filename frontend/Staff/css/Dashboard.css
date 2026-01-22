@@ -1911,3 +1911,78 @@ table tr:last-child td {
     padding: 16px;
   }
 }
+
+/* ============================================
+   TABLE SORTING ENHANCEMENTS
+   ============================================ */
+
+/* Sortable table headers */
+table thead th {
+  position: relative;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+table thead th:hover {
+  background-color: var(--color-beige) !important;
+  transform: translateY(-1px);
+}
+
+table thead th:active {
+  transform: translateY(0);
+}
+
+/* Sort indicator styling */
+.sort-indicator {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 12px;
+  color: var(--color-primary);
+  opacity: 0.7;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+table thead th:hover .sort-indicator {
+  opacity: 1;
+  transform: scale(1.2);
+}
+
+/* Add a subtle icon to indicate sortable columns */
+table thead th::after {
+  content: '⇅';
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0;
+  font-size: 14px;
+  color: var(--color-secondary);
+  transition: opacity 0.2s ease;
+}
+
+table thead th:hover::after {
+  opacity: 0.5;
+}
+
+table thead th.sorted::after {
+  opacity: 0;
+}
+
+/* Smooth row transitions when sorting */
+table tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+/* Loading state for tables during sort */
+table.sorting {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+table.sorting tbody tr {
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
