@@ -957,3 +957,74 @@ button:not(:disabled):active::before {
     padding: 6px 10px;
   }
 }
+
+/* ============================================
+   TABLE SORTING ENHANCEMENTS
+   ============================================ */
+
+/* Sortable table headers */
+#submissionsTable thead th {
+  position: relative;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+#submissionsTable thead th:hover {
+  background-color: rgba(16, 185, 129, 0.15) !important;
+  transform: translateY(-1px);
+}
+
+#submissionsTable thead th:active {
+  transform: translateY(0);
+}
+
+/* Sort indicator styling */
+.sort-indicator {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 12px;
+  color: #10b981;
+  opacity: 0.7;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+#submissionsTable thead th:hover .sort-indicator {
+  opacity: 1;
+  transform: scale(1.2);
+}
+
+/* Add a subtle icon to indicate sortable columns */
+#submissionsTable thead th:not(:last-child)::after {
+  content: '⇅';
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0;
+  font-size: 14px;
+  color: #10b981;
+  transition: opacity 0.2s ease;
+}
+
+#submissionsTable thead th:not(:last-child):hover::after {
+  opacity: 0.5;
+}
+
+/* Smooth row transitions when sorting */
+#submissionsTable tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+/* Loading state for tables during sort */
+#submissionsTable.sorting {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+#submissionsTable.sorting tbody tr {
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
