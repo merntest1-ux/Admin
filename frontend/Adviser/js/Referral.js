@@ -9,6 +9,12 @@ console.log("📋 Referral.js loaded");
 let allReferrals = [];
 let currentUser = null;
 
+let sortConfig = {
+  column: 'urgency',
+  direction: 'desc'
+};
+
+
 // ============================================
 // INITIALIZATION
 // ============================================
@@ -187,8 +193,69 @@ async function loadReferrals() {
 }
 
 // ============================================
-// DISPLAY REFERRALS IN TABLE
+// SORT REFERRALS FUNCTION
 // ============================================
+function sortReferrals(referrals) {
+  const sorted = [...referrals]; // Create a copy
+  
+  sorted.sort((a, b) => {
+    let valueA, valueB;
+
+    switch(sortConfig.column) {
+      case 'referralId':
+        valueA = a.referralId || '';
+        valueB = b.referralId || '';
+        break;
+      case 'studentId':
+        valueA = a.studentId || '';
+        valueB = b.studentId || '';
+        break;
+      case 'studentName':
+        valueA = a.studentName || '';
+        valueB = b.studentName || '';
+        break;
+      case 'level':
+        valueA = a.level || '';
+        valueB = b.level || '';
+        break;
+      case 'grade':
+        valueA = a.grade || '';
+        valueB = b.grade || '';
+        break;
+      case 'status':
+        valueA = a.status || '';
+        valueB = b.status || '';
+        break;
+      case 'urgency':
+        // Urgency priority: High > Medium > Low
+        const urgencyOrder = { 'High': 3, 'Medium': 2, 'Low': 1 };
+        valueA = urgencyOrder[a.urgency] || 0;
+        valueB = urgencyOrder[b.urgency] || 0;
+        break;
+      case 'dateOfInterview':
+      default:
+        valueA = new Date(a.referralDate || a.createdAt).getTime();
+        valueB = new Date(b.referralDate || b.createdAt).getTime();
+        break;
+    }
+
+    // Compare values
+    if (typeof valueA === 'string') {
+      valueA = valueA.toLowerCase();
+      valueB = valueB.toLowerCase();
+      return sortConfig.direction === 'asc' 
+        ? valueA.localeCompare(valueB)
+        : valueB.localeCompare(valueA);
+    } else {
+      return sortConfig.direction === 'asc'
+        ? valueA - valueB
+        : valueB - valueA;
+    }
+  });
+
+  return sorted;
+}
+
 // ============================================
 // DISPLAY REFERRALS IN TABLE
 // ============================================
@@ -219,6 +286,20 @@ function displayReferrals(referrals) {
       day: 'numeric' 
     });
 
+    // Urgency colors (set by teacher/adviser)
+    const urgencyColors = {
+      'Low': '#34d399',
+      'Medium': '#fbbf24',
+      'High': '#f87171'
+    };
+    
+    const urgencyDisplay = referral.urgency 
+      ? `<span class="urgency-badge" style="background-color: ${urgencyColors[referral.urgency] || '#9ca3af'}20; color: ${urgencyColors[referral.urgency] || '#9ca3af'}; padding: 4px 12px; border-radius: 12px; font-size: 0.85rem; font-weight: 500; border: 1px solid ${urgencyColors[referral.urgency] || '#9ca3af'};">
+           ${referral.urgency}
+         </span>`
+      : '<span style="color: #6b7280; font-style: italic;">Not set</span>';
+
+
     // Status badge colors
     const statusColors = {
       'Pending': '#fbbf24',
@@ -237,11 +318,11 @@ function displayReferrals(referrals) {
 
     // Check if status is "Pending" - if so, don't display severity
     const shouldShowSeverity = referral.status !== 'Pending';
-    const severityDisplay = shouldShowSeverity 
-      ? `<span class="severity-badge" style="background-color: ${severityColors[referral.severity] || '#9ca3af'}20; color: ${severityColors[referral.severity] || '#9ca3af'}; padding: 4px 12px; border-radius: 12px; font-size: 0.85rem; font-weight: 500;">
-           ${referral.severity || 'Pending Assessment'}
-         </span>`
-      : '';
+    const severityDisplay = referral.status !== 'Pending'
+  ? `<span class="severity-badge" style="background-color: ${severityColors[referral.severity] || '#9ca3af'}20; color: ${severityColors[referral.severity] || '#9ca3af'}; padding: 4px 12px; border-radius: 12px; font-size: 0.85rem; font-weight: 500;">
+       ${referral.severity || 'Pending Assessment'}
+     </span>`
+  : '';
 
     return `
       <tr data-id="${referral._id}">
@@ -255,6 +336,7 @@ function displayReferrals(referrals) {
             ${referral.status}
           </span>
         </td>
+        <td>${urgencyDisplay}</td>
         <td>${severityDisplay}</td>
         <td>${formattedDate}</td>
         <td>
@@ -274,6 +356,7 @@ function filterReferrals() {
   const searchQuery = document.getElementById("searchInput")?.value.toLowerCase() || '';
   const levelFilter = document.getElementById("levelFilter")?.value || 'all';
   const gradeFilter = document.getElementById("GradeFilter")?.value || 'all';
+  const urgencyFilter = document.getElementById("urgencyFilter")?.value || 'all';  // ADD THIS
   const severityFilter = document.getElementById("severityFilter")?.value || 'all';
   const statusFilter = document.getElementById("statusFilter")?.value || 'all';
 
@@ -296,6 +379,11 @@ function filterReferrals() {
     if (gradeFilter !== 'all' && referral.grade !== gradeFilter) {
       return false;
     }
+
+       // Urgency filter
+     if (urgencyFilter !== 'all' && referral.urgency !== urgencyFilter) {
+       return false;
+     }
 
     // Severity filter
     if (severityFilter !== 'all' && referral.severity !== severityFilter) {
@@ -396,12 +484,14 @@ function initializeEventListeners() {
   const searchInput = document.getElementById("searchInput");
   const levelFilter = document.getElementById("levelFilter");
   const gradeFilter = document.getElementById("GradeFilter");
+  const urgencyFilter = document.getElementById("urgencyFilter");  // ADD THIS
   const severityFilter = document.getElementById("severityFilter");
   const statusFilter = document.getElementById("statusFilter");
 
   if (searchInput) searchInput.addEventListener("input", filterReferrals);
   if (levelFilter) levelFilter.addEventListener("change", filterReferrals);
   if (gradeFilter) gradeFilter.addEventListener("change", filterReferrals);
+  if (urgencyFilter) urgencyFilter.addEventListener("change", filterReferrals);
   if (severityFilter) severityFilter.addEventListener("change", filterReferrals);
   if (statusFilter) statusFilter.addEventListener("change", filterReferrals);
 
@@ -779,6 +869,7 @@ async function handleAddReferral(e) {
     referralDate: document.getElementById("dateOfInterview").value,
     reason: document.getElementById("reason").value.trim(),
     description: document.getElementById("description").value.trim() || undefined,
+    urgency: document.getElementById("urgency").value,
     referredBy: currentUser?.fullName || currentUser?.username || undefined
   };
 
@@ -864,6 +955,7 @@ function openEditModal(referral) {
   }
   
   document.getElementById("edit-status").value = referral.status;
+  document.getElementById("edit-urgency").value = referral.urgency || 'Medium';
   document.getElementById("edit-severity").value = referral.severity || 'Pending Assessment';
   document.getElementById("edit-reason").value = referral.reason;
   document.getElementById("edit-description").value = referral.description || '';
@@ -914,8 +1006,9 @@ async function handleUpdateReferral(e) {
     grade: document.getElementById("edit-grade").value,
     referralDate: document.getElementById("edit-dateOfInterview").value,
     reason: document.getElementById("edit-reason").value.trim(),
-    description: document.getElementById("edit-description").value.trim() || undefined
-  };
+    description: document.getElementById("edit-description").value.trim() || undefined,
+    urgency: document.getElementById("edit-urgency").value
+};
 
   console.log("📤 Updating referral:", id, formData);
 
