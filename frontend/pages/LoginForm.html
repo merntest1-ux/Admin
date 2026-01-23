@@ -126,9 +126,9 @@
                     
                     // Redirect based on role
                     const redirectMap = {
-                        'admin': '/pages/AdminDashboard.html',
-                        'student': '/pages/StudentDashboard.html',
-                        'teacher': '/pages/TeacherDashboard.html'
+                        'admin': '/pages/Dashboard.html',
+                        'counselor': '/Staff/Dashboard.html',
+                        'teacher': '/Adviser/Home.html'
                     };
                     
                     const redirectPath = redirectMap[user.role] || '/pages/Dashboard.html';
@@ -222,3 +222,4 @@
 
 </body>
 </html>
+
