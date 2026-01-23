@@ -774,7 +774,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // ========== HELPER FUNCTIONS FOR DATE FILTERING ==========
+    // ========== HELPER FUNCTIONS FOR DATE FILTERING ==========
   function filterReferralsByTimeRange(referrals, timeFilter, monthFilter, quarterFilter) {
     if (timeFilter === 'all') return referrals;
 
