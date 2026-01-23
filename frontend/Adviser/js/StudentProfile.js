@@ -24,10 +24,10 @@ document.addEventListener('DOMContentLoaded', async function() {
   const gradeFilter = document.getElementById('gradeFilter');
   const studentCount = document.getElementById('studentCount');
   const bulkUploadBtn = document.getElementById('bulkUploadBtn');
-const addStudentBtn = document.getElementById('addStudentBtn');  // ADD THIS
-const uploadModal = document.getElementById('uploadModal');
-const resultsModal = document.getElementById('resultsModal');
-const addStudentModal = document.getElementById('addStudentModal');  // ADD THIS
+  const addStudentBtn = document.getElementById('addStudentBtn');  // ADD THIS
+  const uploadModal = document.getElementById('uploadModal');
+  const resultsModal = document.getElementById('resultsModal');
+  const addStudentModal = document.getElementById('addStudentModal');  // ADD THIS
   const dropZone = document.getElementById('dropZone');
   const fileInput = document.getElementById('fileInput');
   const fileInfo = document.getElementById('fileInfo');
@@ -790,6 +790,8 @@ window.addEventListener('click', (e) => {
     // Set today's date as default
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('ref-dateOfInterview').value = today;
+
+    document.getElementById('ref-urgency').value = '';
     
     // Show modal
     referralModal.style.display = 'block';
@@ -952,8 +954,9 @@ window.addEventListener('click', (e) => {
       const studentId = document.getElementById('ref-studentId').value.trim();
       const reason = document.getElementById('ref-reason').value.trim();
       const referralDate = document.getElementById('ref-dateOfInterview').value;
-      
-      if (!studentId || !reason || !referralDate) {
+      const urgency = document.getElementById('ref-urgency').value;
+
+      if (!studentId || !reason || !referralDate || !urgency) {
         alert('Please fill in all required fields');
         return;
       }
@@ -965,6 +968,7 @@ window.addEventListener('click', (e) => {
         grade: document.getElementById('ref-grade').value,
         referralDate: referralDate,
         reason: reason,
+        urgency: urgency,
         description: document.getElementById('ref-description').value.trim() || undefined,
         referredBy: user.fullName || user.username
       };
