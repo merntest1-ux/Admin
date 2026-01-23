@@ -627,6 +627,12 @@ function viewAllReferralsForStudent(studentId, studentName) {
       const severityDisplay = showSeverity 
         ? `<span class="severity-badge severity-${ref.severity.toLowerCase()}">${escapeHtml(ref.severity)}</span>`
         : '<span style="color: #6b7280; font-style: italic;">–</span>';
+
+      // Create urgency badge (same logic as main table)
+      const urgencyClass = ref.urgency ? ref.urgency.toLowerCase() : 'low';
+      const urgencyDisplay = ref.urgency 
+      ? `<span class="urgency-badge urgency-${urgencyClass}">${escapeHtml(ref.urgency)}</span>`
+      : '<span style="color: #6b7280; font-style: italic;">N/A</span>';
       
       return `
       <tr>
@@ -635,6 +641,7 @@ function viewAllReferralsForStudent(studentId, studentName) {
         <td>${escapeHtml(ref.reason || 'N/A')}</td>
         <td><span class="status-badge status-${ref.status.toLowerCase().replace(/\s+/g, '-')}">${escapeHtml(ref.status)}</span></td>
         <td>${severityDisplay}</td>
+        <td>${urgencyDisplay}</td>
         <td>${escapeHtml(ref.adviser || 'N/A')}</td>
         <td>
           <button class="action-btn view-btn" onclick="viewReferral('${ref._id}')">
@@ -1061,4 +1068,5 @@ window.openDeleteModal = openDeleteModal;
 window.closeViewModal = closeViewModal;
 window.closeDeleteModal = closeDeleteModal;
 window.closeAllReferralsModal = closeAllReferralsModal;
+
 
