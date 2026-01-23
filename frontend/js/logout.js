@@ -1,5 +1,5 @@
 // ============================================
-// SECURE LOGOUT HANDLER - Enhanced Security
+// SECURE LOGOUT HANDLER - Enhanced Security with Force-Logout
 // ============================================
 
 function handleLogout(event) {
@@ -81,9 +81,6 @@ function clearAllClientData() {
   try {
     console.log('🧹 Clearing all client data...');
     
-    // ✅ CRITICAL: Set logout flag FIRST, before clearing anything
-    sessionStorage.setItem('justLoggedOut', 'true');
-    
     const keysToRemove = [
       'token',
       'authToken',
@@ -101,10 +98,8 @@ function clearAllClientData() {
       localStorage.removeItem(key);
     });
     
-    // Clear sessionStorage BUT preserve the justLoggedOut flag
-    const logoutFlag = sessionStorage.getItem('justLoggedOut');
+    // Clear sessionStorage completely (no need to preserve flag with URL param)
     sessionStorage.clear();
-    sessionStorage.setItem('justLoggedOut', logoutFlag);
     
     // Clear in-memory token
     if (window.authToken) {
@@ -185,8 +180,9 @@ function showThankYouAndRedirect() {
   document.body.insertAdjacentHTML('beforeend', thankYouHTML);
   
   setTimeout(() => {
-    // Use replace to prevent back button from returning to authenticated page
-    window.location.replace('/pages/LoginForm.html');
+    // ✅ ENHANCED: Add ?logout=true parameter to force clear authentication
+    // This ensures the login page won't auto-redirect back to dashboard
+    window.location.replace('/pages/LoginForm.html?logout=true');
   }, 2000);
 }
 
@@ -194,7 +190,7 @@ function showThankYouAndRedirect() {
 // SETUP LOGOUT HANDLERS
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
-  console.log("🔒 Secure logout handler initialized");
+  console.log("🔐 Secure logout handler initialized");
   
   setTimeout(() => {
     const logoutSelectors = [
