@@ -1,5 +1,82 @@
 // Dashboard.js - UPDATED STATUS CHART TO LINE GRAPH
 
+    // ========== HELPER FUNCTIONS FOR DATE FILTERING ==========
+  function filterReferralsByTimeRange(referrals, timeFilter, monthFilter, quarterFilter) {
+    if (timeFilter === 'all') return referrals;
+
+    const now = new Date();
+    
+    if (timeFilter === 'month' && monthFilter) {
+      const [year, month] = monthFilter.split('-').map(Number);
+      return referrals.filter(ref => {
+        const date = new Date(ref.createdAt);
+        return date.getFullYear() === year && date.getMonth() === month - 1;
+      });
+    }
+    
+    if (timeFilter === 'quarter' && quarterFilter) {
+      const [year, quarter] = quarterFilter.split('-Q').map(Number);
+      return referrals.filter(ref => {
+        const date = new Date(ref.createdAt);
+        const refQuarter = Math.floor(date.getMonth() / 3) + 1;
+        return date.getFullYear() === year && refQuarter === quarter;
+      });
+    }
+    
+    return referrals;
+  }
+
+  function generateMonthOptions() {
+    const select = document.getElementById('categoryMonthFilter');
+    if (!select) return;
+
+    const now = new Date();
+    const months = [];
+    
+    // Generate last 12 months
+    for (let i = 0; i < 12; i++) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const monthName = date.toLocaleString('default', { month: 'long', year: 'numeric' });
+      months.push({ value: `${year}-${month}`, label: monthName });
+    }
+    
+    select.innerHTML = months.map(m => 
+      `<option value="${m.value}">${m.label}</option>`
+    ).join('');
+  }
+
+  function generateQuarterOptions() {
+    const select = document.getElementById('categoryQuarterFilter');
+    if (!select) return;
+
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentQuarter = Math.floor(now.getMonth() / 3) + 1;
+    const quarters = [];
+    
+    // Generate last 8 quarters (2 years)
+    for (let i = 0; i < 8; i++) {
+      let year = currentYear;
+      let quarter = currentQuarter - i;
+      
+      while (quarter <= 0) {
+        quarter += 4;
+        year -= 1;
+      }
+      
+      quarters.push({ 
+        value: `${year}-Q${quarter}`, 
+        label: `Q${quarter} ${year}` 
+      });
+    }
+    
+    select.innerHTML = quarters.map(q => 
+      `<option value="${q.value}">${q.label}</option>`
+    ).join('');
+  }
+
 document.addEventListener("DOMContentLoaded", async () => {
   console.log("🎢 Dashboard.js loaded");
 
@@ -772,83 +849,6 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (error) {
       console.error("Error loading severity chart:", error);
     }
-  }
-
-    // ========== HELPER FUNCTIONS FOR DATE FILTERING ==========
-  function filterReferralsByTimeRange(referrals, timeFilter, monthFilter, quarterFilter) {
-    if (timeFilter === 'all') return referrals;
-
-    const now = new Date();
-    
-    if (timeFilter === 'month' && monthFilter) {
-      const [year, month] = monthFilter.split('-').map(Number);
-      return referrals.filter(ref => {
-        const date = new Date(ref.createdAt);
-        return date.getFullYear() === year && date.getMonth() === month - 1;
-      });
-    }
-    
-    if (timeFilter === 'quarter' && quarterFilter) {
-      const [year, quarter] = quarterFilter.split('-Q').map(Number);
-      return referrals.filter(ref => {
-        const date = new Date(ref.createdAt);
-        const refQuarter = Math.floor(date.getMonth() / 3) + 1;
-        return date.getFullYear() === year && refQuarter === quarter;
-      });
-    }
-    
-    return referrals;
-  }
-
-  function generateMonthOptions() {
-    const select = document.getElementById('categoryMonthFilter');
-    if (!select) return;
-
-    const now = new Date();
-    const months = [];
-    
-    // Generate last 12 months
-    for (let i = 0; i < 12; i++) {
-      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const monthName = date.toLocaleString('default', { month: 'long', year: 'numeric' });
-      months.push({ value: `${year}-${month}`, label: monthName });
-    }
-    
-    select.innerHTML = months.map(m => 
-      `<option value="${m.value}">${m.label}</option>`
-    ).join('');
-  }
-
-  function generateQuarterOptions() {
-    const select = document.getElementById('categoryQuarterFilter');
-    if (!select) return;
-
-    const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentQuarter = Math.floor(now.getMonth() / 3) + 1;
-    const quarters = [];
-    
-    // Generate last 8 quarters (2 years)
-    for (let i = 0; i < 8; i++) {
-      let year = currentYear;
-      let quarter = currentQuarter - i;
-      
-      while (quarter <= 0) {
-        quarter += 4;
-        year -= 1;
-      }
-      
-      quarters.push({ 
-        value: `${year}-Q${quarter}`, 
-        label: `Q${quarter} ${year}` 
-      });
-    }
-    
-    select.innerHTML = quarters.map(q => 
-      `<option value="${q.value}">${q.label}</option>`
-    ).join('');
   }
 
   // Initialize month and quarter dropdowns
@@ -1893,13 +1893,6 @@ async function loadTopReferral() {
 
 }
 
-// ... existing code ...
-
-async function loadTopReferral() {
-  // ... existing loadTopReferral code ...
-}
-
-// ========== ADD THIS ENTIRE SECTION HERE ==========
 // ========== TABLE SORTING FUNCTIONALITY ==========
 let currentSort = {
   column: null,
@@ -2023,5 +2016,4 @@ function updateSortIndicators(table, activeColumn, direction) {
   });
 }
 // ========== END OF SORTING FUNCTIONS ==========
-
 
