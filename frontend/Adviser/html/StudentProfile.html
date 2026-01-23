@@ -288,78 +288,90 @@
   </div>
 </div>
 
-  <!-- Add Referral Modal -->
-  <div id="referralModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>
-          <span class="material-symbols-outlined">article</span>
-          Add Client Referral
-        </h2>
-        <span class="close" id="closeReferralModal">&times;</span>
-      </div>
-      <div class="modal-body">
-        <form id="referralForm" class="referral-form">
-          <input type="hidden" id="ref-studentId">
-          <input type="hidden" id="ref-level">
-          <input type="hidden" id="ref-grade">
+<!-- Add Referral Modal -->
+<div id="referralModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>
+        <span class="material-symbols-outlined">article</span>
+        Add Client Referral
+      </h2>
+      <span class="close" id="closeReferralModal">&times;</span>
+    </div>
+    <div class="modal-body">
+      <form id="referralForm" class="referral-form">
+        <input type="hidden" id="ref-studentId">
+        <input type="hidden" id="ref-level">
+        <input type="hidden" id="ref-grade">
 
-          <div class="form-row">
-            <div class="form-group">
-              <label for="ref-studentName">Student Name *</label>
-              <input type="text" id="ref-studentName" name="studentName" readonly>
-            </div>
-            
-            <div class="form-group">
-              <label for="ref-studentIdDisplay">Student ID *</label>
-              <input type="text" id="ref-studentIdDisplay" name="studentIdDisplay" readonly>
-            </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="ref-studentName">Student Name *</label>
+            <input type="text" id="ref-studentName" name="studentName" readonly>
           </div>
+          
+          <div class="form-group">
+            <label for="ref-studentIdDisplay">Student ID *</label>
+            <input type="text" id="ref-studentIdDisplay" name="studentIdDisplay" readonly>
+          </div>
+        </div>
 
-          <div class="form-row">
-            <div class="form-group">
-              <label for="ref-levelDisplay">Level *</label>
-              <input type="text" id="ref-levelDisplay" name="levelDisplay" readonly>
-            </div>
-
-            <div class="form-group">
-              <label for="ref-gradeDisplay">Grade *</label>
-              <input type="text" id="ref-gradeDisplay" name="gradeDisplay" readonly>
-            </div>
-
-            <div class="form-group">
-              <label for="ref-dateOfInterview">Date of Referral *</label>
-              <input type="date" id="ref-dateOfInterview" name="dateOfInterview" required>
-            </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="ref-levelDisplay">Level *</label>
+            <input type="text" id="ref-levelDisplay" name="levelDisplay" readonly>
           </div>
 
           <div class="form-group">
-            <label for="ref-reason">Reason for Referral *</label>
-            <input type="text" id="ref-reason" name="reason" placeholder="e.g., Academic concerns, Behavioral issues" required>
+            <label for="ref-gradeDisplay">Grade *</label>
+            <input type="text" id="ref-gradeDisplay" name="gradeDisplay" readonly>
           </div>
 
           <div class="form-group">
-            <label for="ref-description">Description</label>
-            <textarea id="ref-description" name="description" rows="4" placeholder="Detailed description of the concern..."></textarea>
+            <label for="ref-dateOfInterview">Date of Referral *</label>
+            <input type="date" id="ref-dateOfInterview" name="dateOfInterview" required>
           </div>
+        </div>
 
-          <div class="info-box" style="background: rgba(16, 185, 129, 0.1); padding: 12px; border-radius: 8px; margin-bottom: 1rem; border: 1px solid rgba(16, 185, 129, 0.3);">
-            <p style="margin: 0; color: #10b981; font-size: 0.9rem;">
-              ℹ️ <strong>Note:</strong> Severity level will be assessed by the counselor/staff during review.
-            </p>
-          </div>
+        <div class="form-group">
+          <label for="ref-reason">Reason for Referral *</label>
+          <input type="text" id="ref-reason" name="reason" placeholder="e.g., Academic concerns, Behavioral issues" required>
+        </div>
 
-          <div class="modal-footer">
-            <button type="button" class="btn-secondary" id="cancelReferralBtn">Cancel</button>
-            <button type="submit" class="btn-primary">
-              <span class="material-symbols-outlined">add</span>
-              Submit Referral
-            </button>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="ref-urgency">Urgency Level *</label>
+            <select id="ref-urgency" name="urgency" required>
+              <option value="">Select Urgency</option>
+              <option value="Low">Low</option>
+              <option value="Medium">Medium</option>
+              <option value="High">High</option>
+            </select>
           </div>
-        </form>
-      </div>
+        </div>
+
+        <div class="form-group">
+          <label for="ref-description">Description</label>
+          <textarea id="ref-description" name="description" rows="4" placeholder="Detailed description of the concern..."></textarea>
+        </div>
+
+        <div class="info-box" style="background: rgba(16, 185, 129, 0.1); padding: 12px; border-radius: 8px; margin-bottom: 1rem; border: 1px solid rgba(16, 185, 129, 0.3);">
+          <p style="margin: 0; color: #10b981; font-size: 0.9rem;">
+            ℹ️ <strong>Note:</strong> Urgency level helps counselors prioritize referrals. Severity level will be assessed by the counselor/staff during review.
+          </p>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" id="cancelReferralBtn">Cancel</button>
+          <button type="submit" class="btn-primary">
+            <span class="material-symbols-outlined">add</span>
+            Submit Referral
+          </button>
+        </div>
+      </form>
     </div>
   </div>
+</div>
 
   <!-- View Referrals Modal -->
   <div id="viewReferralsModal" class="modal" style="overflow-y: hidden;">
