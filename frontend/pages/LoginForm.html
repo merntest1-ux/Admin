@@ -66,19 +66,43 @@
     <!-- ✅ ENHANCED: Check if user is already logged in or just logged out -->
     <script>
         (function() {
-            // ✅ NEW: Check for force logout parameter in URL
-            const urlParams = new URLSearchParams(window.location.search);
-            const forceLogout = urlParams.get('logout') === 'true';
-            
-            if (forceLogout) {
-                console.log('🔓 Force logout detected - clearing all auth data...');
+            // ✅ Helper function to validate user data integrity
+            function isValidUserData(user) {
+                if (!user) return false;
                 
-                // Clear all authentication data
+                // Must have required fields
+                if (!user.role || !user.username) {
+                    console.warn('⚠️ Invalid user data: missing role or username');
+                    return false;
+                }
+                
+                // Role must be valid
+                const validRoles = ['admin', 'teacher', 'student', 'counselor'];
+                if (!validRoles.includes(user.role)) {
+                    console.warn('⚠️ Invalid user role:', user.role);
+                    return false;
+                }
+                
+                return true;
+            }
+            
+            // ✅ Helper function to clear corrupted data
+            function clearCorruptedAuth() {
+                console.log('🧹 Clearing corrupted authentication data...');
                 localStorage.removeItem('token');
                 localStorage.removeItem('authToken');
                 localStorage.removeItem('user');
                 localStorage.removeItem('currentUser');
                 sessionStorage.clear();
+            }
+            
+            // ✅ Check for force logout parameter in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const forceLogout = urlParams.get('logout') === 'true';
+            
+            if (forceLogout) {
+                console.log('🔓 Force logout detected - clearing all auth data...');
+                clearCorruptedAuth();
                 
                 // Remove the parameter from URL to clean it up
                 window.history.replaceState({}, document.title, window.location.pathname);
@@ -97,7 +121,7 @@
                 return; // Stop here, show login form
             }
             
-            // Check if user just logged out (via sessionStorage flag)
+            // ✅ Check if user just logged out (via sessionStorage flag)
             const justLoggedOut = sessionStorage.getItem('justLoggedOut');
             if (justLoggedOut === 'true') {
                 sessionStorage.removeItem('justLoggedOut');
@@ -115,32 +139,50 @@
                 return; // Don't redirect, user just logged out
             }
 
-            // If user is already authenticated, redirect to appropriate dashboard
+            // ✅ If user is already authenticated, redirect to appropriate dashboard
             const token = localStorage.getItem('token') || localStorage.getItem('authToken');
             const userStr = localStorage.getItem('user') || localStorage.getItem('currentUser');
             
             if (token && userStr) {
                 try {
                     const user = JSON.parse(userStr);
-                    console.log('✅ User already logged in, redirecting...');
                     
-                    // Redirect based on role
+                    // ✅ CRITICAL: Validate user data integrity
+                    if (!isValidUserData(user)) {
+                        console.error('❌ Invalid user data detected - clearing...');
+                        clearCorruptedAuth();
+                        return; // Show login form
+                    }
+                    
+                    console.log('✅ Valid session found');
+                    console.log('👤 User:', user.username);
+                    console.log('🎭 Role:', user.role);
+                    
+                    // ✅ Redirect based on role (CORRECTED file structure)
                     const redirectMap = {
                         'admin': '/pages/Dashboard.html',
                         'counselor': '/Staff/Dashboard.html',
+                        'student': '/pages/StudentDashboard.html',
                         'teacher': '/Adviser/Home.html'
                     };
                     
-                    const redirectPath = redirectMap[user.role] || '/pages/Dashboard.html';
+                    const redirectPath = redirectMap[user.role];
+                    
+                    if (!redirectPath) {
+                        console.error('❌ No redirect path for role:', user.role);
+                        clearCorruptedAuth();
+                        return;
+                    }
+                    
+                    console.log('🚀 Redirecting to:', redirectPath);
                     window.location.replace(redirectPath);
+                    
                 } catch (e) {
-                    console.error('Error parsing user data:', e);
-                    // Clear invalid data
-                    localStorage.removeItem('user');
-                    localStorage.removeItem('currentUser');
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('authToken');
+                    console.error('❌ Error parsing user data:', e);
+                    clearCorruptedAuth();
                 }
+            } else {
+                console.log('ℹ️ No active session - showing login form');
             }
         })();
     </script>
@@ -222,4 +264,3 @@
 
 </body>
 </html>
-
