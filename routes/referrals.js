@@ -31,6 +31,7 @@ router.post("/", auth, async (req, res) => {
       reason,
       description: description || "",
       severity: severity || "Medium",
+      urgency: urgency || "Low",
       referredBy: referredBy || undefined,
       createdBy: req.user._id, // Always set (no more null values!)
     });
@@ -238,8 +239,8 @@ router.put("/:id", auth, async (req, res) => {
     
     if (!isAdminOrCounselor && isOwner) {
       // Teachers can only update basic fields
-      const { studentName, studentId, level, grade, referralDate, reason, description, severity, referredBy } = req.body;
-      updateData = { studentName, studentId, level, grade, referralDate, reason, description, severity, referredBy };
+      const { studentName, studentId, level, grade, referralDate, reason, description, severity, urgency, referredBy } = req.body;
+      updateData = { studentName, studentId, level, grade, referralDate, reason, description, severity, urgency, referredBy };
     }
     // Admin/Counselor can update all fields
 
@@ -273,5 +274,6 @@ router.delete("/:id", auth, authorizeRoles("Admin", "Counselor"), async (req, re
     res.status(500).json({ success: false, error: error.message });
   }
 });
+
 
 module.exports = router;
