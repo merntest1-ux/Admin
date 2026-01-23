@@ -156,6 +156,14 @@
                     <option value="High">High</option>
                   </select>
                 </th>
+                <th>
+                  <select id="urgencyFilter" class="filter-dropdown">
+                    <option value="all">All Urgency</option>
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                  </select>
+                </th>
                 <th>Latest Date</th>
                 <th>Actions</th>
               </tr>
@@ -191,6 +199,7 @@
                 <th>Reason</th>
                 <th>Status</th>
                 <th>Severity</th>
+                <th>Urgency</th>
                 <th>Referred By</th>
                 <th>Actions</th>
               </tr>
@@ -318,6 +327,18 @@
             </div>
           </div>
 
+        <!-- NEW: Urgency Field -->
+          <div class="receipt-field">
+            <div class="receipt-field-label">Urgency Level</div>
+            <div class="receipt-field-value">
+              <select id="view-urgency" disabled>
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+              </select>
+            </div>
+          </div>          
+        
           <div class="receipt-field-full">
             <div class="receipt-field-label">Reason for Referral</div>
             <div class="receipt-field-value">
