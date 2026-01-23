@@ -776,26 +776,51 @@ window.addEventListener('click', (e) => {
 
   // Open Add Referral Modal
   window.openAddReferralModal = (studentDbId, studentId, studentName, level, grade) => {
-    console.log('📝 Opening add referral modal for:', studentName);
-    
+  console.log('📝 Opening add referral modal for:', studentName);
+  
+  // Show modal first to ensure elements are in DOM
+  referralModal.style.display = 'block';
+  
+  // Small delay to ensure modal is rendered
+  setTimeout(() => {
     // Populate form with student info
-    document.getElementById('ref-studentId').value = studentId;
-    document.getElementById('ref-studentName').value = studentName;
-    document.getElementById('ref-studentIdDisplay').value = studentId;
-    document.getElementById('ref-level').value = level;
-    document.getElementById('ref-grade').value = grade;
-    document.getElementById('ref-levelDisplay').value = level;
-    document.getElementById('ref-gradeDisplay').value = grade;
+    const studentIdField = document.getElementById('ref-studentId');
+    const studentNameField = document.getElementById('ref-studentName');
+    const studentIdDisplayField = document.getElementById('ref-studentIdDisplay');
+    const levelField = document.getElementById('ref-level');
+    const gradeField = document.getElementById('ref-grade');
+    const levelDisplayField = document.getElementById('ref-levelDisplay');
+    const gradeDisplayField = document.getElementById('ref-gradeDisplay');
+    const dateField = document.getElementById('ref-dateOfInterview');
+    const urgencyField = document.getElementById('ref-urgency');
+    const descriptionField = document.getElementById('ref-description');
+    
+    if (studentIdField) studentIdField.value = studentId;
+    if (studentNameField) studentNameField.value = studentName;
+    if (studentIdDisplayField) studentIdDisplayField.value = studentId;
+    if (levelField) levelField.value = level;
+    if (gradeField) gradeField.value = grade;
+    if (levelDisplayField) levelDisplayField.value = level;
+    if (gradeDisplayField) gradeDisplayField.value = grade;
     
     // Set today's date as default
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('ref-dateOfInterview').value = today;
-
-    document.getElementById('ref-urgency').value = '';
+    if (dateField) {
+      const today = new Date().toISOString().split('T')[0];
+      dateField.value = today;
+    }
     
-    // Show modal
-    referralModal.style.display = 'block';
-  };
+    // Reset urgency dropdown to empty
+    if (urgencyField) {
+      urgencyField.value = '';
+      console.log('✅ All fields populated successfully');
+    } else {
+      console.error('❌ Urgency field not found!');
+    }
+    
+    // Clear description
+    if (descriptionField) descriptionField.value = '';
+  }, 50);
+};
 
   // Open View Referrals Modal
   window.openViewReferralsModal = async (studentId, studentName) => {
@@ -950,16 +975,37 @@ window.addEventListener('click', (e) => {
       
       console.log('📝 Form submitted!');
       
-      // Validate required fields
-      const studentId = document.getElementById('ref-studentId').value.trim();
-      const reason = document.getElementById('ref-reason').value.trim();
-      const referralDate = document.getElementById('ref-dateOfInterview').value;
-      const urgency = document.getElementById('ref-urgency').value;
+  // Validate required fields - check elements exist first
+  const studentIdElement = document.getElementById('ref-studentId');
+  const reasonElement = document.getElementById('ref-reason');
+  const referralDateElement = document.getElementById('ref-dateOfInterview');
+  const urgencyElement = document.getElementById('ref-urgency');
 
-      if (!studentId || !reason || !referralDate || !urgency) {
-        alert('Please fill in all required fields');
-        return;
-      }
+  // Check if all elements exist
+  if (!studentIdElement || !reasonElement || !referralDateElement || !urgencyElement) {
+    console.error('❌ Form elements not found!', {
+      studentId: !!studentIdElement,
+      reason: !!reasonElement,
+      referralDate: !!referralDateElement,
+      urgency: !!urgencyElement
+    });
+    alert('Form error: Required fields not found. Please refresh the page.');
+    return;
+  }
+
+  // Get values from elements
+  const studentId = studentIdElement.value.trim();
+  const reason = reasonElement.value.trim();
+  const referralDate = referralDateElement.value;
+  const urgency = urgencyElement.value;
+
+  console.log('📋 Form values:', { studentId, reason, referralDate, urgency });
+
+  // Validate values are filled
+  if (!studentId || !reason || !referralDate || !urgency) {
+    alert('Please fill in all required fields');
+    return;
+  };
       
       const formData = {
         studentName: document.getElementById('ref-studentName').value.trim(),
@@ -1031,3 +1077,4 @@ window.addEventListener('click', (e) => {
     console.error('❌ Referral form not found!');
   }
 });
+
