@@ -223,11 +223,11 @@ document.addEventListener('DOMContentLoaded', async function() {
   // Load students
   async function loadStudents() {
     try {
-      console.log('📚 Loading students for teacher:', user.fullName);
+      console.log('ðŸ“š Loading students for teacher:', user.fullName);
       
       const response = await apiClient.get('/students');
       
-      console.log('📥 Students response:', response);
+      console.log('ðŸ“¥ Students response:', response);
       
       if (response.success) {
         allStudents = response.data || [];
@@ -393,7 +393,7 @@ addStudentForm.addEventListener('submit', async (e) => {
     contactNumber: document.getElementById('addStudentContact').value.trim()
   };
 
-  console.log('📤 Adding new student:', formData);
+  console.log('ðŸ“¤ Adding new student:', formData);
 
   try {
     const submitBtn = addStudentForm.querySelector('button[type="submit"]');
@@ -403,13 +403,13 @@ addStudentForm.addEventListener('submit', async (e) => {
     
     const response = await apiClient.post('/students', formData);
     
-    console.log('📥 Response:', response);
+    console.log('ðŸ“¥ Response:', response);
     
     submitBtn.disabled = false;
     submitBtn.innerHTML = originalText;
     
     if (response.success) {
-      console.log('✅ Student added successfully!');
+      console.log('âœ… Student added successfully!');
       
       addStudentModal.style.display = 'none';
       resetAddStudentForm();
@@ -417,7 +417,7 @@ addStudentForm.addEventListener('submit', async (e) => {
       if (typeof customAlert !== 'undefined' && customAlert.success) {
         customAlert.success('Student has been added successfully!', 'Success!');
       } else {
-        alert('✅ Student added successfully! 🎉');
+        alert('âœ… Student added successfully! ðŸŽ‰');
       }
       
       loadStudents();
@@ -425,7 +425,7 @@ addStudentForm.addEventListener('submit', async (e) => {
       throw new Error(response.error || response.message || 'Failed to add student');
     }
   } catch (error) {
-    console.error('❌ Error adding student:', error);
+    console.error('âŒ Error adding student:', error);
     
     const submitBtn = addStudentForm.querySelector('button[type="submit"]');
     if (submitBtn) {
@@ -437,7 +437,7 @@ addStudentForm.addEventListener('submit', async (e) => {
     if (typeof customAlert !== 'undefined' && customAlert.error) {
       customAlert.error(errorMsg, 'Error!');  
     } else {
-      alert('❌ Error: ' + errorMsg);
+      alert('âŒ Error: ' + errorMsg);
     }
   }
 });
@@ -521,7 +521,7 @@ window.addEventListener('click', (e) => {
 
   // Handle file selection
   function handleFileSelect(file) {
-    console.log('🔎 File selected:', file.name, file.type, file.size);
+    console.log('ðŸ”Ž File selected:', file.name, file.type, file.size);
     
     // Validate file type
     const validTypes = [
@@ -549,7 +549,7 @@ window.addEventListener('click', (e) => {
     fileInfo.style.display = 'block';
     confirmUploadBtn.disabled = false;
     
-    console.log('✅ File validated successfully');
+    console.log('âœ… File validated successfully');
   }
 
   // Format file size
@@ -568,7 +568,7 @@ window.addEventListener('click', (e) => {
       return;
     }
 
-    console.log('📤 Starting upload for file:', selectedFile.name);
+    console.log('ðŸ“¤ Starting upload for file:', selectedFile.name);
 
     // Create FormData
     const formData = new FormData();
@@ -582,12 +582,12 @@ window.addEventListener('click', (e) => {
       progressBar.style.width = '30%';
       progressText.textContent = 'Uploading file...';
 
-      console.log('📡 Sending request to /students/bulk-upload');
+      console.log('ðŸ“¡ Sending request to /students/bulk-upload');
 
       // Use apiClient upload method
       const response = await apiClient.upload('/students/bulk-upload', formData);
 
-      console.log('📥 Upload response:', response);
+      console.log('ðŸ“¥ Upload response:', response);
 
       if (!response.success) {
         throw new Error(response.error || response.message || 'Upload failed');
@@ -609,7 +609,7 @@ window.addEventListener('click', (e) => {
       }, 500);
 
     } catch (error) {
-      console.error('❌ Upload error:', error);
+      console.error('âŒ Upload error:', error);
       showCustomAlert(error.message || 'Failed to upload file', 'error');
       resetUploadModal();
     }
@@ -617,7 +617,7 @@ window.addEventListener('click', (e) => {
 
   // Display upload results
   function displayUploadResults(response) {
-    console.log('📊 Displaying results:', response);
+    console.log('ðŸ“Š Displaying results:', response);
     
     const summary = response.summary || { inserted: 0, duplicates: 0, errors: 0, totalRows: 0 };
     const duplicates = response.duplicates || [];
@@ -625,23 +625,23 @@ window.addEventListener('click', (e) => {
     
     let html = `
       <div style="margin-bottom: 1.5rem;">
-        <h3 style="color: #10b981; margin-top: 0;">📊 Upload Summary</h3>
+        <h3 style="color: #10b981; margin-top: 0;">ðŸ“Š Upload Summary</h3>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
           <div style="background: rgba(16, 185, 129, 0.1); padding: 1rem; border-radius: 8px; text-align: center; border: 1px solid rgba(16, 185, 129, 0.3);">
             <div style="font-size: 2rem; font-weight: bold; color: #10b981;">${summary.inserted}</div>
-            <div style="color: #10b981; font-size: 0.9rem;">✅ Added</div>
+            <div style="color: #10b981; font-size: 0.9rem;">âœ… Added</div>
           </div>
           <div style="background: rgba(251, 191, 36, 0.1); padding: 1rem; border-radius: 8px; text-align: center; border: 1px solid rgba(251, 191, 36, 0.3);">
             <div style="font-size: 2rem; font-weight: bold; color: #fbbf24;">${summary.duplicates}</div>
-            <div style="color: #fbbf24; font-size: 0.9rem;">⚠️ Duplicates</div>
+            <div style="color: #fbbf24; font-size: 0.9rem;">âš ï¸ Duplicates</div>
           </div>
           <div style="background: rgba(239, 68, 68, 0.1); padding: 1rem; border-radius: 8px; text-align: center; border: 1px solid rgba(239, 68, 68, 0.3);">
             <div style="font-size: 2rem; font-weight: bold; color: #ef4444;">${summary.errors}</div>
-            <div style="color: #ef4444; font-size: 0.9rem;">❌ Errors</div>
+            <div style="color: #ef4444; font-size: 0.9rem;">âŒ Errors</div>
           </div>
           <div style="background: rgba(59, 130, 246, 0.1); padding: 1rem; border-radius: 8px; text-align: center; border: 1px solid rgba(59, 130, 246, 0.3);">
             <div style="font-size: 2rem; font-weight: bold; color: #3b82f6;">${summary.totalRows}</div>
-            <div style="color: #3b82f6; font-size: 0.9rem;">📋 Total Rows</div>
+            <div style="color: #3b82f6; font-size: 0.9rem;">ðŸ“‹ Total Rows</div>
           </div>
         </div>
       </div>
@@ -651,7 +651,7 @@ window.addEventListener('click', (e) => {
     if (duplicates.length > 0) {
       html += `
         <div style="margin-bottom: 1.5rem;">
-          <h4 style="color: #fbbf24; margin-top: 0;">⚠️ Duplicates Found (${duplicates.length})</h4>
+          <h4 style="color: #fbbf24; margin-top: 0;">âš ï¸ Duplicates Found (${duplicates.length})</h4>
           <div style="max-height: 200px; overflow-y: auto; background: rgba(251, 191, 36, 0.1); padding: 1rem; border-radius: 8px; border: 1px solid rgba(251, 191, 36, 0.3);">
             ${duplicates.map(d => `
               <div style="margin-bottom: 0.5rem; color: #e0e0e0;">
@@ -667,7 +667,7 @@ window.addEventListener('click', (e) => {
     if (errors.length > 0) {
       html += `
         <div style="margin-bottom: 1.5rem;">
-          <h4 style="color: #ef4444; margin-top: 0;">❌ Errors (${errors.length})</h4>
+          <h4 style="color: #ef4444; margin-top: 0;">âŒ Errors (${errors.length})</h4>
           <div style="max-height: 200px; overflow-y: auto; background: rgba(239, 68, 68, 0.1); padding: 1rem; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.3);">
             ${errors.map(e => `
               <div style="margin-bottom: 0.5rem; color: #e0e0e0;">
@@ -684,7 +684,7 @@ window.addEventListener('click', (e) => {
       html += `
         <div style="background: rgba(16, 185, 129, 0.1); padding: 1rem; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.3);">
           <p style="margin: 0; color: #10b981;">
-            ✅ Successfully added ${summary.inserted} student${summary.inserted !== 1 ? 's' : ''} to your class!
+            âœ… Successfully added ${summary.inserted} student${summary.inserted !== 1 ? 's' : ''} to your class!
           </p>
         </div>
       `;
@@ -709,14 +709,14 @@ window.addEventListener('click', (e) => {
   }
 
   // Initial load
-  console.log('🚀 Initializing student profile page...');
+  console.log('ðŸš€ Initializing student profile page...');
   loadStudents();
 
   // --------------------------
   // REFERRAL MODAL FUNCTIONS
   // --------------------------
   
-  console.log('🔧 Setting up referral modals...');
+  console.log('ðŸ”§ Setting up referral modals...');
   
   // Add Referral Modal
   const referralModal = document.getElementById('referralModal');
@@ -776,7 +776,7 @@ window.addEventListener('click', (e) => {
 
   // Open Add Referral Modal
   window.openAddReferralModal = (studentDbId, studentId, studentName, level, grade) => {
-  console.log('📝 Opening add referral modal for:', studentName);
+  console.log('ðŸ“ Opening add referral modal for:', studentName);
   
   // Show modal first to ensure elements are in DOM
   referralModal.style.display = 'block';
@@ -812,9 +812,9 @@ window.addEventListener('click', (e) => {
     // Reset urgency dropdown to empty
     if (urgencyField) {
       urgencyField.value = '';
-      console.log('✅ All fields populated successfully');
+      console.log('âœ… All fields populated successfully');
     } else {
-      console.error('❌ Urgency field not found!');
+      console.error('âŒ Urgency field not found!');
     }
     
     // Clear description
@@ -824,7 +824,7 @@ window.addEventListener('click', (e) => {
 
   // Open View Referrals Modal
   window.openViewReferralsModal = async (studentId, studentName) => {
-    console.log('👁️ Opening view referrals modal for:', studentName);
+    console.log('ðŸ‘ï¸ Opening view referrals modal for:', studentName);
     
     // Set student name in header
     document.getElementById('viewRef-studentName').textContent = studentName;
@@ -842,7 +842,7 @@ window.addEventListener('click', (e) => {
     container.innerHTML = '<p style="text-align: center; color: #6b7280;">Loading referrals...</p>';
     
     try {
-      console.log('📥 Loading referrals for student:', studentId);
+      console.log('ðŸ“¥ Loading referrals for student:', studentId);
       
       // Use teacher's authorized endpoint and filter by studentId on frontend
       const response = await apiClient.getMyReferrals();
@@ -851,7 +851,7 @@ window.addEventListener('click', (e) => {
         const allReferrals = response.data || [];
         // Filter referrals for this specific student
         const referrals = allReferrals.filter(ref => ref.studentId === studentId);
-        console.log(`✅ Loaded ${referrals.length} referrals for student ${studentId}`);
+        console.log(`âœ… Loaded ${referrals.length} referrals for student ${studentId}`);
         
         if (referrals.length === 0) {
           container.innerHTML = `
@@ -955,7 +955,7 @@ window.addEventListener('click', (e) => {
         throw new Error(response.error || 'Failed to load referrals');
       }
     } catch (error) {
-      console.error('❌ Error loading referrals:', error);
+      console.error('âŒ Error loading referrals:', error);
       container.innerHTML = `
         <div style="text-align: center; padding: 2rem; color: #ef4444;">
           <span class="material-symbols-outlined" style="font-size: 48px;">error</span>
@@ -967,46 +967,47 @@ window.addEventListener('click', (e) => {
 
   // Handle referral form submission
   if (referralForm) {
-    console.log('✅ Attaching submit handler to referral form');
+    console.log('âœ… Attaching submit handler to referral form');
     
     referralForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       e.stopPropagation();
       
-      console.log('📝 Form submitted!');
+  console.log('📝 Form submitted!');
+
+      // Get all form elements first
+      const studentIdElement = document.getElementById('ref-studentId');
+      const reasonElement = document.getElementById('ref-reason');
+      const referralDateElement = document.getElementById('ref-dateOfInterview');
+      const urgencyElement = document.getElementById('ref-urgency');
+          
+      // Check if all elements exist
+      if (!studentIdElement || !reasonElement || !referralDateElement || !urgencyElement) {
+        console.error('❌ Form elements not found!', {
+          studentId: !!studentIdElement,
+          reason: !!reasonElement,
+          referralDate: !!referralDateElement,
+          urgency: !!urgencyElement
+        });
+        alert('Form error: Required fields not found. Please refresh the page.');
+        return;
+      }
       
-  // Validate required fields - check elements exist first
-  const studentIdElement = document.getElementById('ref-studentId');
-  const reasonElement = document.getElementById('ref-reason');
-  const referralDateElement = document.getElementById('ref-dateOfInterview');
-  const urgencyElement = document.getElementById('ref-urgency');
-
-  // Check if all elements exist
-  if (!studentIdElement || !reasonElement || !referralDateElement || !urgencyElement) {
-    console.error('❌ Form elements not found!', {
-      studentId: !!studentIdElement,
-      reason: !!reasonElement,
-      referralDate: !!referralDateElement,
-      urgency: !!urgencyElement
-    });
-    alert('Form error: Required fields not found. Please refresh the page.');
-    return;
-  }
-
-  // Get values from elements
-  const studentId = studentIdElement.value.trim();
-  const reason = reasonElement.value.trim();
-  const referralDate = referralDateElement.value;
-  const urgency = urgencyElement.value;
-
-  console.log('📋 Form values:', { studentId, reason, referralDate, urgency });
-
-  // Validate values are filled
-  if (!studentId || !reason || !referralDate || !urgency) {
-    alert('Please fill in all required fields');
-    return;
-  }
+      // Get values from elements
+      const studentId = studentIdElement.value.trim();
+      const reason = reasonElement.value.trim();
+      const referralDate = referralDateElement.value;
+      const urgency = urgencyElement.value;
       
+      console.log('📋 Form values:', { studentId, reason, referralDate, urgency });
+      
+      // Validate values are filled
+      if (!studentId || !reason || !referralDate || !urgency) {
+        alert('Please fill in all required fields');
+        return;
+      }
+      
+      // Now create formData object (this will be at line ~1052)
       const formData = {
         studentName: document.getElementById('ref-studentName').value.trim(),
         studentId: studentId,
@@ -1019,7 +1020,7 @@ window.addEventListener('click', (e) => {
         referredBy: user.fullName || user.username
       };
 
-      console.log('📤 Submitting new referral:', formData);
+      console.log('ðŸ“¤ Submitting new referral:', formData);
 
       try {
         // Show loading state
@@ -1030,14 +1031,14 @@ window.addEventListener('click', (e) => {
         
         const response = await apiClient.post('/referrals', formData);
         
-        console.log('📥 Response:', response);
+        console.log('ðŸ“¥ Response:', response);
         
         // Restore button
         submitBtn.disabled = false;
         submitBtn.innerHTML = originalText;
         
         if (response.success) {
-          console.log('✅ Referral created successfully!');
+          console.log('âœ… Referral created successfully!');
           
           // Close modal first
           referralModal.style.display = 'none';
@@ -1048,13 +1049,13 @@ window.addEventListener('click', (e) => {
             customAlert.success('Referral has been created successfully!', 'Success!');
           } else {
             // Fallback to native alert
-            alert('✅ Referral created successfully! 🎉');
+            alert('âœ… Referral created successfully! ðŸŽ‰');
           }
         } else {
           throw new Error(response.error || response.message || 'Failed to create referral');
         }
       } catch (error) {
-        console.error('❌ Error creating referral:', error);
+        console.error('âŒ Error creating referral:', error);
         
         // Restore button
         const submitBtn = referralForm.querySelector('button[type="submit"]');
@@ -1069,13 +1070,12 @@ window.addEventListener('click', (e) => {
           customAlert.error(errorMsg, 'Error!');  
         } else {
           // Fallback to native alert
-          alert('❌ Error: ' + errorMsg);
+          alert('âŒ Error: ' + errorMsg);
         }
       }
     });
   } else {
-    console.error('❌ Referral form not found!');
+    console.error('âŒ Referral form not found!');
   }
 });
-
 
