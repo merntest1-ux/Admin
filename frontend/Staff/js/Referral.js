@@ -532,6 +532,7 @@ function renderGroupedReferrals() {
     const matchesLevel = selectedLevel === 'all' || student.level === selectedLevel;
     const matchesGrade = selectedGrade === 'all' || normalizeGrade(student.grade) === selectedGrade;
     const matchesStatus = selectedStatus === 'all' || student.latestReferral.status === selectedStatus;
+    const matchesSeverity = selectedSeverity === 'all' || student.latestReferral.severity === selectedSeverity;
     const matchesUrgency = selectedUrgency === 'all' || student.latestReferral.urgency === selectedUrgency;
     
     return matchesSearch && matchesLevel && matchesGrade && matchesStatus && matchesSeverity && matchesUrgency;
@@ -1060,3 +1061,4 @@ window.openDeleteModal = openDeleteModal;
 window.closeViewModal = closeViewModal;
 window.closeDeleteModal = closeDeleteModal;
 window.closeAllReferralsModal = closeAllReferralsModal;
+
