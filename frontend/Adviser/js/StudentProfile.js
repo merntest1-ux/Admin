@@ -1005,7 +1005,7 @@ window.addEventListener('click', (e) => {
   if (!studentId || !reason || !referralDate || !urgency) {
     alert('Please fill in all required fields');
     return;
-  };
+  }
       
       const formData = {
         studentName: document.getElementById('ref-studentName').value.trim(),
@@ -1077,4 +1077,5 @@ window.addEventListener('click', (e) => {
     console.error('❌ Referral form not found!');
   }
 });
+
 
