@@ -51,6 +51,11 @@ const referralSchema = new mongoose.Schema(
       enum: ["Low", "Medium", "High"],
       default: "Medium",
     },
+     urgency: {
+      type: String,
+      enum: ["Low", "Medium", "High"],
+      default: "Low",
+    },
     status: {
       type: String,
       enum: ["Pending", "Under Review", "For Consultation", "Complete"],
@@ -113,5 +118,6 @@ referralSchema.pre("save", async function (next) {
   }
   next();
 });
+
 
 module.exports = mongoose.model("Referral", referralSchema);
