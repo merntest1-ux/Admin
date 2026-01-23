@@ -63,13 +63,45 @@
         }
     </style>
 
-    <!-- Check if user is already logged in or just logged out -->
+    <!-- ✅ ENHANCED: Check if user is already logged in or just logged out -->
     <script>
         (function() {
-            // Check if user just logged out
+            // ✅ NEW: Check for force logout parameter in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const forceLogout = urlParams.get('logout') === 'true';
+            
+            if (forceLogout) {
+                console.log('🔓 Force logout detected - clearing all auth data...');
+                
+                // Clear all authentication data
+                localStorage.removeItem('token');
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('user');
+                localStorage.removeItem('currentUser');
+                sessionStorage.clear();
+                
+                // Remove the parameter from URL to clean it up
+                window.history.replaceState({}, document.title, window.location.pathname);
+                
+                // Show logout success message
+                window.addEventListener('DOMContentLoaded', function() {
+                    const successDiv = document.getElementById('logoutSuccess');
+                    if (successDiv) {
+                        successDiv.style.display = 'block';
+                        setTimeout(() => {
+                            successDiv.style.display = 'none';
+                        }, 4000);
+                    }
+                });
+                
+                return; // Stop here, show login form
+            }
+            
+            // Check if user just logged out (via sessionStorage flag)
             const justLoggedOut = sessionStorage.getItem('justLoggedOut');
             if (justLoggedOut === 'true') {
                 sessionStorage.removeItem('justLoggedOut');
+                
                 // Show logout success message
                 window.addEventListener('DOMContentLoaded', function() {
                     const successDiv = document.getElementById('logoutSuccess');
