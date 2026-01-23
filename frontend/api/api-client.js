@@ -1,5 +1,5 @@
 // ============================================
-// COMPLETE API-CLIENT.JS - With Dynamic API URL + Student Submissions + All Endpoints
+// COMPLETE API-CLIENT.JS - FIXED: Token Persistence & Better Error Handling
 // ============================================
 
 // 🔧 Automatically detect the correct API URL based on environment
@@ -26,21 +26,43 @@ console.log("🌐 Current origin:", window.location.origin);
 
 class APIClient {
   constructor() {
-    this.token = localStorage.getItem("token") || localStorage.getItem("authToken") || null;
+    // ✅ FIXED: Don't store token in memory, always get from localStorage
     console.log("✅ APIClient initialized with API URL:", API_BASE_URL);
+    this.logTokenStatus();
+  }
+
+  // ✅ NEW: Helper to log token status
+  logTokenStatus() {
+    const token = this.getToken();
+    if (token) {
+      console.log("🎫 Token found:", token.substring(0, 20) + "...");
+    } else {
+      console.warn("⚠️ No token found in localStorage");
+    }
+  }
+
+  // ✅ CRITICAL FIX: Always get fresh token from localStorage
+  getToken() {
+    return localStorage.getItem("token") || localStorage.getItem("authToken") || null;
   }
 
   setToken(token) {
-    this.token = token;
+    if (!token) {
+      console.error("❌ Attempted to set null/undefined token");
+      return;
+    }
+    
     localStorage.setItem("token", token);
     localStorage.setItem("authToken", token);
+    console.log("✅ Token saved to localStorage");
   }
 
   removeToken() {
-    this.token = null;
     localStorage.removeItem("authToken");
     localStorage.removeItem("token");
     localStorage.removeItem("currentUser");
+    localStorage.removeItem("user");
+    console.log("🗑️ All tokens and user data removed");
   }
 
   getHeaders(isFileUpload = false) {
@@ -50,8 +72,13 @@ class APIClient {
       headers["Content-Type"] = "application/json";
     }
     
-    if (this.token) {
-      headers["Authorization"] = `Bearer ${this.token}`;
+    // ✅ CRITICAL FIX: Always get fresh token from localStorage
+    const token = this.getToken();
+    
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    } else {
+      console.warn("⚠️ No token available for request");
     }
     
     return headers;
@@ -68,8 +95,48 @@ class APIClient {
     
     console.log(`📡 ${options.method || 'GET'} ${url}`);
     
+    // ✅ Enhanced logging
+    if (config.headers.Authorization) {
+      console.log("🔑 Request includes Authorization header");
+    } else {
+      console.warn("⚠️ Request missing Authorization header - this may fail!");
+    }
+    
     try {
       const response = await fetch(url, config);
+      
+      // ✅ CRITICAL: Better error handling for 401/403
+      if (response.status === 401 || response.status === 403) {
+        console.error(`❌ ${response.status} - Authentication failed`);
+        console.error("🔍 Token in localStorage:", this.getToken() ? "Present" : "Missing");
+        
+        try {
+          const errorData = await response.json();
+          console.error("❌ Server error:", errorData.message || errorData.error);
+          
+          // If unauthorized, might need to re-login
+          if (response.status === 401) {
+            console.error("🚨 Session expired - please login again");
+            // Optionally redirect to login
+            // window.location.href = '/pages/LoginForm.html?logout=true';
+          }
+          
+          return { 
+            success: false, 
+            error: errorData.message || errorData.error || "Authentication failed",
+            message: errorData.message || errorData.error || "Authentication failed",
+            status: response.status
+          };
+        } catch (e) {
+          return {
+            success: false,
+            error: "Authentication failed - please login again",
+            message: "Authentication failed - please login again",
+            status: response.status
+          };
+        }
+      }
+      
       const data = await response.json();
       
       console.log(`📥 Response [${response.status}]:`, data);
@@ -78,13 +145,15 @@ class APIClient {
         return { 
           success: false, 
           error: data.message || data.error || "Request failed",
-          message: data.message || data.error || "Request failed" 
+          message: data.message || data.error || "Request failed",
+          status: response.status
         };
       }
       
       return { 
         success: true, 
-        message: data.message || "Success", 
+        message: data.message || "Success",
+        status: response.status,
         ...data
       };
     } catch (error) {
@@ -92,7 +161,8 @@ class APIClient {
       return { 
         success: false, 
         error: error.message || "Request failed",
-        message: error.message || "Request failed" 
+        message: error.message || "Request failed",
+        status: 0
       };
     }
   }
@@ -189,17 +259,10 @@ class APIClient {
     return this.put(`/users/${userId}/reset-password`, { newPassword }); 
   }
   
-  // ❌ DELETE DISABLED - Use Archive/Restore instead
-  // async deleteUser(userId) { 
-  //   return this.delete(`/users/${userId}`); 
-  // }
-  
-  // ✅ Archive user (replaces delete)
   async archiveUser(userId) {
     return this.put(`/users/${userId}/archive`, {});
   }
   
-  // ✅ Restore archived user
   async restoreUser(userId) {
     return this.put(`/users/${userId}/restore`, {});
   }
@@ -227,74 +290,37 @@ class APIClient {
   // STUDENT SUBMISSION ENDPOINTS
   // ============================================
   
-  /**
-   * Submit a student concern (PUBLIC - no auth required)
-   * @param {Object} data - {studentName, concern, nameOption}
-   * @returns {Promise} Response with submissionId (format: SUB-YYYYMMDD-###)
-   */
   async submitStudentConcern(data) {
     console.log("📝 Submitting student concern...");
     return this.post("/student-submissions/submit", data);
   }
   
-  /**
-   * Get all student submissions (Counselor/Admin only)
-   * @param {Object} filters - {status, severity}
-   * @returns {Promise} List of submissions
-   */
   async getStudentSubmissions(filters = {}) {
     console.log("📋 Fetching student submissions...");
     const q = new URLSearchParams(filters).toString();
     return this.get(q ? `/student-submissions?${q}` : "/student-submissions");
   }
   
-  /**
-   * Get single student submission by ID (Counselor/Admin only)
-   * @param {string} id - Submission ID
-   * @returns {Promise} Submission details
-   */
   async getStudentSubmission(id) {
     console.log("📋 Fetching student submission:", id);
     return this.get(`/student-submissions/${id}`);
   }
   
-  /**
-   * Update student submission status/notes (Counselor/Admin only)
-   * @param {string} id - Submission ID
-   * @param {Object} data - {studentId, studentName, level, grade, status, severity, notes}
-   * @returns {Promise} Updated submission
-   */
   async updateStudentSubmission(id, data) {
     console.log("✏️ Updating student submission:", id);
     return this.put(`/student-submissions/${id}`, data);
   }
   
-  /**
-   * Process student submission into official referral (Counselor/Admin only)
-   * This is the KEY method - converts submission to official referral
-   * @param {string} id - Submission ID
-   * @param {Object} data - {studentId, level, grade, severity, category, notes, referredBy}
-   * @returns {Promise} {submission, referral} - Both records returned
-   */
   async processStudentSubmission(id, data) {
     console.log("🔄 Processing student submission:", id, "→ Creating official referral");
     return this.post(`/student-submissions/${id}/process`, data);
   }
   
-  /**
-   * Delete student submission (Admin only)
-   * @param {string} id - Submission ID
-   * @returns {Promise} Success message
-   */
   async deleteStudentSubmission(id) {
     console.log("🗑️ Deleting student submission:", id);
     return this.delete(`/student-submissions/${id}`);
   }
   
-  /**
-   * Get student submissions statistics (Counselor/Admin only)
-   * @returns {Promise} Statistics object with counts
-   */
   async getStudentSubmissionStats() {
     console.log("📊 Fetching student submission stats...");
     return this.get("/student-submissions/stats/summary");
@@ -329,11 +355,6 @@ class APIClient {
     return this.get("/referrals/stats"); 
   }
 
-  /**
-   * 🆕 Get referrals created by current teacher (TEACHER-SPECIFIC)
-   * This endpoint is authorized for teachers to access their own referrals
-   * @returns {Promise} List of referrals created by the logged-in teacher
-   */
   async getMyReferrals() {
     console.log("📋 Fetching my referrals (teacher-authorized endpoint)...");
     return this.get("/referrals/my-referrals");
@@ -372,12 +393,6 @@ class APIClient {
     return this.get("/students/stats/overview"); 
   }
 
-  /**
-   * 🆕 Search students for autocomplete (NEW METHOD)
-   * Used for auto-filling student information in submission forms
-   * @param {string} query - Search query (student ID or name)
-   * @returns {Promise} List of matching students with {_id, studentId, name, level, grade}
-   */
   async searchStudents(query) {
     console.log("🔍 Searching students:", query);
     if (!query || query.length < 2) {
@@ -473,4 +488,3 @@ if (typeof window !== 'undefined') {
   console.log("✅ apiClient attached to window object");
   console.log("✅ API will connect to:", API_BASE_URL);
 }
-
