@@ -1,6 +1,16 @@
-// LoginForm.js - CORRECTED: Fixed token access and response handling
+// ============================================
+// LOGIN.JS - Enhanced with Force-Logout Support
+// ============================================
 
 let isLoggingIn = false; // Prevent multiple submissions
+
+// ✅ Clear any logout flags on page load (cleanup)
+(function() {
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('logout') === 'true') {
+    console.log('🔓 Logout parameter detected - already cleared by LoginForm.html');
+  }
+})();
 
 // ---------------- Login ----------------
 document.getElementById("loginForm").addEventListener("submit", async (e) => {
@@ -47,6 +57,9 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
         console.error('❌ Invalid response structure:', response);
         throw new Error('Invalid server response. Please try again.');
       }
+      
+      // ✅ IMPORTANT: Clear any existing logout flags before saving new session
+      sessionStorage.removeItem('justLoggedOut');
       
       // Save authentication data
       apiClient.setToken(response.token);
@@ -109,7 +122,10 @@ window.addEventListener('beforeunload', () => {
   isLoggingIn = false;
 });
 
-// ---------------- Forgot Password ----------------
+// ============================================
+// FORGOT PASSWORD FUNCTIONALITY
+// ============================================
+
 const forgotPasswordLink = document.getElementById("forgotPasswordLink");
 const forgotModal = document.getElementById("forgotPasswordModal");
 const closeModal = forgotModal.querySelector(".close");
@@ -152,16 +168,36 @@ sendTempBtn.addEventListener("click", async () => {
       fpMessage.textContent = "Temporary password sent! Check your email.";
       document.getElementById("fpUsername").value = "";
       document.getElementById("fpEmail").value = "";
+      
+      // Auto-close modal after 3 seconds
+      setTimeout(() => {
+        forgotModal.style.display = "none";
+      }, 3000);
     } else {
       fpMessage.style.color = "#b91c1c";
       fpMessage.textContent = response.message || response.error || "Failed to send temporary password.";
     }
   } catch (err) {
-    console.error(err);
+    console.error('Forgot password error:', err);
     fpMessage.style.color = "#b91c1c";
     fpMessage.textContent = "Something went wrong. Please try again.";
   }
 
   sendTempBtn.disabled = false;
   sendTempBtn.textContent = "Send Temporary Password";
+});
+
+// ============================================
+// ADDITIONAL SECURITY: Prevent back button after logout
+// ============================================
+window.addEventListener('pageshow', function(event) {
+  // Check if page was loaded from cache (back/forward button)
+  if (event.persisted) {
+    // Check if this is after a logout
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('logout') === 'true') {
+      console.log('🔄 Page loaded from cache after logout - forcing reload');
+      window.location.reload();
+    }
+  }
 });
