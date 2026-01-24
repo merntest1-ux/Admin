@@ -605,7 +605,7 @@ function viewAllReferralsForStudent(studentId, studentName) {
         <td><span class="status-badge status-${ref.status.toLowerCase().replace(/\s+/g, '-')}">${escapeHtml(ref.status)}</span></td>
         <td>${severityDisplay}</td>
         <td>${urgencyDisplay}</td>
-        <td>${escapeHtml(ref.adviser || 'N/A')}</td>
+        <td>${escapeHtml(ref.referredBy || 'N/A')}</td>
         <td>
           <button class="action-btn view-btn" onclick="viewReferral('${ref._id}')">
             <span class="material-symbols-outlined">edit</span>
@@ -686,7 +686,7 @@ async function viewReferral(referralId) {
       }
       
       // Set adviser field
-      const adviserValue = referral.adviser || referral.referredBy || referral.adviserName || referral.teacher || '';
+      const adviserValue = referral.referredBy || referral.adviser || referral.advisor || '';
       setInputValue('view-adviser', adviserValue);
       console.log('👤 Adviser set to:', adviserValue);
       
@@ -1031,6 +1031,7 @@ window.openDeleteModal = openDeleteModal;
 window.closeViewModal = closeViewModal;
 window.closeDeleteModal = closeDeleteModal;
 window.closeAllReferralsModal = closeAllReferralsModal;
+
 
 
 
