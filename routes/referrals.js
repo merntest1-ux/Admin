@@ -6,12 +6,11 @@ const express = require("express");
 const router = express.Router();
 const Referral = require("../models/Referral");
 const { auth, authorizeRoles } = require("../middleware/auth");
-const ActivityLogger = require("../services/activityLogger"); // ADD THIS LINE
 
 // CREATE referral (any logged-in staff user)
 router.post("/", auth, async (req, res) => {
   try {
-    console.log("ðŸ"¥ Creating staff referral:", req.body);
+    console.log("ðŸ”¥ Creating staff referral:", req.body);
 
     const { studentName, studentId, level, grade, referralDate, reason, description, severity, urgency, referredBy } = req.body;
 
@@ -42,12 +41,9 @@ router.post("/", auth, async (req, res) => {
     
     console.log("âœ… Staff referral created:", savedReferral.referralId);
     
-    // ✅ LOG THE ACTIVITY
-    await ActivityLogger.logReferralCreated(savedReferral, req.user, req);
-    
     res.status(201).json({ success: true, data: savedReferral });
   } catch (error) {
-    console.error("âŒ Error creating referral:", error);
+    console.error("âŒ Error creating referral:", error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -219,16 +215,15 @@ router.get("/:id", auth, async (req, res) => {
 // UPDATE referral
 router.put("/:id", auth, async (req, res) => {
   try {
-    // ✅ GET OLD REFERRAL BEFORE UPDATING
-    const oldReferral = await Referral.findById(req.params.id);
+    const referral = await Referral.findById(req.params.id);
 
-    if (!oldReferral) {
+    if (!referral) {
       return res.status(404).json({ success: false, error: "Referral not found" });
     }
 
     // Permission check
     const isAdminOrCounselor = req.user.role === "Admin" || req.user.role === "Counselor";
-    const isOwner = oldReferral.createdBy.toString() === req.user._id.toString();
+    const isOwner = referral.createdBy.toString() === req.user._id.toString();
     
     // No more null checks needed! createdBy is always set
     
@@ -255,14 +250,6 @@ router.put("/:id", auth, async (req, res) => {
       { new: true, runValidators: true }
     ).populate("createdBy", "username fullName role");
 
-    // ✅ LOG THE ACTIVITY WITH CHANGES
-    await ActivityLogger.logReferralUpdated(
-      oldReferral.toObject(),
-      updatedReferral.toObject(),
-      req.user,
-      req
-    );
-
     res.json({ success: true, data: updatedReferral });
   } catch (error) {
     console.error("Error updating referral:", error);
@@ -270,20 +257,14 @@ router.put("/:id", auth, async (req, res) => {
   }
 });
 
-// DELETE referral (Admin or Counselor only)
+// DELETE referral (Admin only)
 router.delete("/:id", auth, authorizeRoles("Admin", "Counselor"), async (req, res) => {
   try {
-    const referral = await Referral.findById(req.params.id);
+    const referral = await Referral.findByIdAndDelete(req.params.id);
     
     if (!referral) {
       return res.status(404).json({ success: false, error: "Referral not found" });
     }
-
-    // ✅ LOG THE ACTIVITY BEFORE DELETION
-    await ActivityLogger.logReferralDeleted(referral, req.user, req);
-
-    // Now delete it
-    await Referral.findByIdAndDelete(req.params.id);
 
     console.log(`âœ… Referral ${referral.referralId} deleted by ${req.user.role}: ${req.user.fullName || req.user.username}`);
 
@@ -294,26 +275,6 @@ router.delete("/:id", auth, authorizeRoles("Admin", "Counselor"), async (req, re
   }
 });
 
-// ✅ GET ACTIVITY LOGS ENDPOINT
-router.get("/logs/activity", auth, authorizeRoles("Admin", "Counselor"), async (req, res) => {
-  try {
-    const AuditLog = require("../models/AuditLog");
-    
-    const logs = await AuditLog.find()
-      .sort({ timestamp: -1 })
-      .limit(500);
-
-    res.json({
-      success: true,
-      data: logs
-    });
-  } catch (error) {
-    console.error("Error fetching activity logs:", error);
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
-});
 
 module.exports = router;
+
