@@ -469,11 +469,14 @@ function resetAddStudentForm() {
   addStudentGrade.disabled = true;
 }
 
-  // Bulk Upload Modal
+  if (bulkUploadBtn) {
   bulkUploadBtn.addEventListener('click', () => {
-    uploadModal.style.display = 'block';
-    resetUploadModal();
+    if (uploadModal) {
+      uploadModal.style.display = 'block';
+      resetUploadModal();
+    }
   });
+}
 
   // Close modals
   const closeButtons = document.querySelectorAll('.close');
@@ -488,14 +491,22 @@ function resetAddStudentForm() {
     });
   }
 
+  if (cancelUploadBtn) {
   cancelUploadBtn.addEventListener('click', () => {
-    uploadModal.style.display = 'none';
-    resetUploadModal();
+    if (uploadModal) {
+      uploadModal.style.display = 'none';
+      resetUploadModal();
+    }
   });
+}
 
+  if (closeResultsBtn) {
   closeResultsBtn.addEventListener('click', () => {
-    resultsModal.style.display = 'none';
+    if (resultsModal) {
+      resultsModal.style.display = 'none';
+    }
   });
+}
 
  // Click outside to close
 window.addEventListener('click', (e) => {
