@@ -6,11 +6,12 @@ const express = require("express");
 const router = express.Router();
 const Referral = require("../models/Referral");
 const { auth, authorizeRoles } = require("../middleware/auth");
+const { logActivity } = require("../middleware/activityLogger"); // 👈 NEW
 
 // CREATE referral (any logged-in staff user)
 router.post("/", auth, async (req, res) => {
   try {
-    console.log("ðŸ”¥ Creating staff referral:", req.body);
+    console.log("📥 Creating staff referral:", req.body);
 
     const { studentName, studentId, level, grade, referralDate, reason, description, severity, urgency, referredBy } = req.body;
 
@@ -33,17 +34,30 @@ router.post("/", auth, async (req, res) => {
       severity: severity || "Medium",
       urgency: urgency || "Low",
       referredBy: referredBy || undefined,
-      createdBy: req.user._id, // Always set (no more null values!)
+      createdBy: req.user._id,
     });
 
     const savedReferral = await newReferral.save();
     await savedReferral.populate("createdBy", "username fullName role");
     
-    console.log("âœ… Staff referral created:", savedReferral.referralId);
+    console.log("✅ Staff referral created:", savedReferral.referralId);
+    
+    // 👇 LOG THE ACTIVITY
+    await logActivity({
+      userId: req.user._id,
+      userName: req.user.fullName || req.user.username,
+      action: 'created',
+      entityType: 'referral',
+      entityId: savedReferral._id.toString(),
+      studentName: savedReferral.studentName,
+      referralId: savedReferral.referralId,
+      description: `Created new referral for ${savedReferral.studentName} (${level} - Grade ${grade})`,
+      req
+    });
     
     res.status(201).json({ success: true, data: savedReferral });
   } catch (error) {
-    console.error("âŒ Error creating referral:", error);
+    console.error("❌ Error creating referral:", error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -199,11 +213,22 @@ router.get("/:id", auth, async (req, res) => {
     const isAdminOrCounselor = req.user.role === "Admin" || req.user.role === "Counselor";
     const isOwner = referral.createdBy._id.toString() === req.user._id.toString();
     
-    // No more null checks needed! createdBy is always set for staff referrals
-    
     if (!isAdminOrCounselor && !isOwner) {
       return res.status(403).json({ success: false, error: "Forbidden: Access denied" });
     }
+
+    // 👇 LOG THE ACTIVITY (view)
+    await logActivity({
+      userId: req.user._id,
+      userName: req.user.fullName || req.user.username,
+      action: 'viewed',
+      entityType: 'referral',
+      entityId: referral._id.toString(),
+      studentName: referral.studentName,
+      referralId: referral.referralId,
+      description: `Viewed referral for ${referral.studentName}`,
+      req
+    });
 
     res.json({ success: true, data: referral });
   } catch (error) {
@@ -225,14 +250,25 @@ router.put("/:id", auth, async (req, res) => {
     const isAdminOrCounselor = req.user.role === "Admin" || req.user.role === "Counselor";
     const isOwner = referral.createdBy.toString() === req.user._id.toString();
     
-    // No more null checks needed! createdBy is always set
-    
     if (!isAdminOrCounselor && !isOwner) {
       return res.status(403).json({ 
         success: false, 
         error: "Forbidden: You can only update your own referrals" 
       });
     }
+
+    // 👇 Track changes for activity log
+    const changes = {};
+    const fieldsToTrack = ['status', 'severity', 'urgency', 'description', 'level', 'grade'];
+    
+    fieldsToTrack.forEach(field => {
+      if (req.body[field] && referral[field] !== req.body[field]) {
+        changes[field] = {
+          old: referral[field],
+          new: req.body[field]
+        };
+      }
+    });
 
     // Determine what can be updated based on role
     let updateData = req.body;
@@ -250,6 +286,20 @@ router.put("/:id", auth, async (req, res) => {
       { new: true, runValidators: true }
     ).populate("createdBy", "username fullName role");
 
+    // 👇 LOG THE ACTIVITY
+    await logActivity({
+      userId: req.user._id,
+      userName: req.user.fullName || req.user.username,
+      action: 'updated',
+      entityType: 'referral',
+      entityId: updatedReferral._id.toString(),
+      studentName: updatedReferral.studentName,
+      referralId: updatedReferral.referralId,
+      description: `Updated referral for ${updatedReferral.studentName}`,
+      changes: Object.keys(changes).length > 0 ? changes : null,
+      req
+    });
+
     res.json({ success: true, data: updatedReferral });
   } catch (error) {
     console.error("Error updating referral:", error);
@@ -260,13 +310,47 @@ router.put("/:id", auth, async (req, res) => {
 // DELETE referral (Admin only)
 router.delete("/:id", auth, authorizeRoles("Admin", "Counselor"), async (req, res) => {
   try {
-    const referral = await Referral.findByIdAndDelete(req.params.id);
+    const referral = await Referral.findById(req.params.id);
     
     if (!referral) {
       return res.status(404).json({ success: false, error: "Referral not found" });
     }
 
-    console.log(`âœ… Referral ${referral.referralId} deleted by ${req.user.role}: ${req.user.fullName || req.user.username}`);
+    // Store data before deletion for activity log
+    const referralData = {
+      id: referral._id.toString(),
+      referralId: referral.referralId,
+      studentName: referral.studentName,
+      level: referral.level,
+      grade: referral.grade,
+      severity: referral.severity,
+      status: referral.status
+    };
+
+    await Referral.findByIdAndDelete(req.params.id);
+    
+    console.log(`✅ Referral ${referralData.referralId} deleted by ${req.user.role}: ${req.user.fullName || req.user.username}`);
+
+    // 👇 LOG THE ACTIVITY
+    await logActivity({
+      userId: req.user._id,
+      userName: req.user.fullName || req.user.username,
+      action: 'deleted',
+      entityType: 'referral',
+      entityId: referralData.id,
+      studentName: referralData.studentName,
+      referralId: referralData.referralId,
+      description: `Deleted referral ${referralData.referralId} for ${referralData.studentName}`,
+      changes: {
+        deleted: {
+          level: referralData.level,
+          grade: referralData.grade,
+          severity: referralData.severity,
+          status: referralData.status
+        }
+      },
+      req
+    });
 
     res.json({ success: true, message: "Referral deleted successfully" });
   } catch (error) {
@@ -275,6 +359,4 @@ router.delete("/:id", auth, authorizeRoles("Admin", "Counselor"), async (req, re
   }
 });
 
-
 module.exports = router;
-
