@@ -12,7 +12,7 @@ router.post("/", auth, async (req, res) => {
   try {
     console.log("🔥 Creating staff referral:", req.body);
 
-    const { studentName, studentId, level, grade, referralDate, reason, description, severity, referredBy } = req.body;
+    const { studentName, studentId, level, grade, referralDate, reason, description, severity, urgency, referredBy } = req.body;
 
     // Validate required fields
     if (!studentName || !level || !grade || !reason || !referralDate) {
@@ -277,3 +277,4 @@ router.delete("/:id", auth, authorizeRoles("Admin", "Counselor"), async (req, re
 
 
 module.exports = router;
+
