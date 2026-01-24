@@ -13,6 +13,9 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   // Setup profile dropdown FIRST
   setupProfileDropdown();
+
+  // Initialize undo manager for referrals
+  const undoManager = new ReferralUndoManager();
   
   // Load user profile to show avatar
   await loadUserProfile();
@@ -965,15 +968,17 @@ window.addEventListener('click', (e) => {
     }
   }
 
-  // Handle referral form submission
+ // --------------------------
+  // HANDLE REFERRAL FORM SUBMISSION
+  // --------------------------
   if (referralForm) {
-    console.log('âœ… Attaching submit handler to referral form');
+    console.log('✓ Attaching submit handler to referral form');
     
     referralForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       e.stopPropagation();
       
-  console.log('📝 Form submitted!');
+      console.log('📝 Form submitted!');
 
       // Get all form elements first
       const studentIdElement = document.getElementById('ref-studentId');
@@ -1007,7 +1012,7 @@ window.addEventListener('click', (e) => {
         return;
       }
       
-      // Now create formData object (this will be at line ~1052)
+      // Now create formData object
       const formData = {
         studentName: document.getElementById('ref-studentName').value.trim(),
         studentId: studentId,
@@ -1020,7 +1025,7 @@ window.addEventListener('click', (e) => {
         referredBy: user.fullName || user.username
       };
 
-      console.log('ðŸ“¤ Submitting new referral:', formData);
+      console.log('🔤 Submitting new referral:', formData);
 
       try {
         // Show loading state
@@ -1031,14 +1036,25 @@ window.addEventListener('click', (e) => {
         
         const response = await apiClient.post('/referrals', formData);
         
-        console.log('ðŸ“¥ Response:', response);
+        console.log('📤 Response:', response);
         
         // Restore button
         submitBtn.disabled = false;
         submitBtn.innerHTML = originalText;
         
         if (response.success) {
-          console.log('âœ… Referral created successfully!');
+          console.log('✓ Referral created successfully!');
+          
+          // *** ADD TO UNDO STACK - NEW CODE ***
+          if (undoManager && response.data && response.data._id) {
+            undoManager.addToUndoStack({
+              type: 'referral_added',
+              referralId: response.data._id,
+              referralData: formData,
+              description: `Referral for ${formData.studentName}`
+            });
+          }
+          // *** END NEW CODE ***
           
           // Close modal first
           referralModal.style.display = 'none';
@@ -1048,14 +1064,13 @@ window.addEventListener('click', (e) => {
           if (typeof customAlert !== 'undefined' && customAlert.success) {
             customAlert.success('Referral has been created successfully!', 'Success!');
           } else {
-            // Fallback to native alert
-            alert('âœ… Referral created successfully! ðŸŽ‰');
+            alert('✓ Referral created successfully! 🎉');
           }
         } else {
           throw new Error(response.error || response.message || 'Failed to create referral');
         }
       } catch (error) {
-        console.error('âŒ Error creating referral:', error);
+        console.error('❌ Error creating referral:', error);
         
         // Restore button
         const submitBtn = referralForm.querySelector('button[type="submit"]');
@@ -1069,13 +1084,235 @@ window.addEventListener('click', (e) => {
         if (typeof customAlert !== 'undefined' && customAlert.error) {
           customAlert.error(errorMsg, 'Error!');  
         } else {
-          // Fallback to native alert
-          alert('âŒ Error: ' + errorMsg);
+          alert('❌ Error: ' + errorMsg);
         }
       }
     });
   } else {
-    console.error('âŒ Referral form not found!');
+    console.error('❌ Referral form not found!');
   }
 });
+     
+// ============================================
+// UNDO FEATURE - REFERRAL UNDO MANAGER
+// ============================================
+
+class ReferralUndoManager {
+  constructor() {
+    this.undoStack = [];
+    this.maxUndoItems = 10; // Keep last 10 actions
+    this.undoButton = null;
+    this.undoNotification = null;
+    this.init();
+  }
+
+  init() {
+    this.createUndoButton();
+    this.loadUndoHistory();
+    this.updateUndoButtonVisibility();
+  }
+
+  createUndoButton() {
+    // Create floating undo button
+    const button = document.createElement('div');
+    button.id = 'undoButton';
+    button.className = 'undo-floating-button';
+    button.innerHTML = `
+      <button class="undo-btn" title="Undo last action (Ctrl+Z)">
+        <span class="material-symbols-outlined">undo</span>
+        <span class="undo-label">Undo</span>
+      </button>
+      <div class="undo-tooltip"></div>
+    `;
+    document.body.appendChild(button);
+    
+    this.undoButton = button.querySelector('.undo-btn');
+    this.undoButton.addEventListener('click', () => this.performUndo());
+    
+    // Keyboard shortcut (Ctrl+Z)
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        e.preventDefault();
+        this.performUndo();
+      }
+    });
+  }
+
+  addToUndoStack(action) {
+    // action = { type: 'referral_added', referralId, referralData, timestamp }
+    
+    if (this.undoStack.length >= this.maxUndoItems) {
+      this.undoStack.shift(); // Remove oldest
+    }
+    
+    this.undoStack.push({
+      ...action,
+      timestamp: new Date(),
+      id: Date.now() // Unique ID for this action
+    });
+
+    // Save to localStorage
+    this.saveUndoHistory();
+    this.updateUndoButtonVisibility();
+    this.showUndoNotification(action);
+  }
+
+  async performUndo() {
+    if (this.undoStack.length === 0) {
+      this.showErrorMessage('Nothing to undo');
+      return;
+    }
+
+    const action = this.undoStack[this.undoStack.length - 1];
+    
+    try {
+      const result = await this.executeUndo(action);
+      
+      if (result.success) {
+        this.undoStack.pop();
+        this.saveUndoHistory();
+        this.updateUndoButtonVisibility();
+        this.showSuccessMessage(`Undid: ${action.description}`);
+      }
+    } catch (error) {
+      console.error('Undo error:', error);
+      this.showErrorMessage(`Failed to undo: ${error.message}`);
+    }
+  }
+
+  async executeUndo(action) {
+    if (action.type === 'referral_added') {
+      return await this.undoReferralAddition(action);
+    }
+    // Add more undo types as needed
+    return { success: false, error: 'Unknown action type' };
+  }
+
+  async undoReferralAddition(action) {
+    console.log('Undoing referral addition:', action.referralId);
+    
+    try {
+      // Call API to delete the referral
+      const response = await apiClient.delete(`/referrals/${action.referralId}`);
+      
+      if (response.success) {
+        console.log('✓ Referral deleted successfully');
+        return { success: true };
+      } else {
+        throw new Error(response.error || 'Failed to delete referral');
+      }
+    } catch (error) {
+      console.error('✗ Error deleting referral:', error);
+      throw error;
+    }
+  }
+
+  updateUndoButtonVisibility() {
+    if (!this.undoButton) return;
+    
+    if (this.undoStack.length > 0) {
+      this.undoButton.parentElement.classList.add('has-actions');
+      
+      // Update tooltip with latest action
+      const latestAction = this.undoStack[this.undoStack.length - 1];
+      const tooltip = this.undoButton.parentElement.querySelector('.undo-tooltip');
+      if (tooltip) {
+        tooltip.textContent = `Undo: ${latestAction.description}`;
+      }
+    } else {
+      this.undoButton.parentElement.classList.remove('has-actions');
+    }
+  }
+
+  showUndoNotification(action) {
+    const notification = document.createElement('div');
+    notification.className = 'undo-notification undo-show';
+    notification.innerHTML = `
+      <span class="material-symbols-outlined">check_circle</span>
+      <div class="undo-notification-content">
+        <p class="undo-notification-title">Action recorded</p>
+        <p class="undo-notification-text">${action.description}</p>
+        <p class="undo-notification-hint">Press Ctrl+Z to undo</p>
+      </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto-remove after 4 seconds
+    setTimeout(() => {
+      notification.classList.remove('undo-show');
+      setTimeout(() => notification.remove(), 300);
+    }, 4000);
+  }
+
+  showSuccessMessage(message) {
+    const notification = document.createElement('div');
+    notification.className = 'undo-notification undo-notification-success undo-show';
+    notification.innerHTML = `
+      <span class="material-symbols-outlined">task_alt</span>
+      <div class="undo-notification-content">
+        <p class="undo-notification-title">Success</p>
+        <p class="undo-notification-text">${message}</p>
+      </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+      notification.classList.remove('undo-show');
+      setTimeout(() => notification.remove(), 300);
+    }, 3000);
+  }
+
+  showErrorMessage(message) {
+    const notification = document.createElement('div');
+    notification.className = 'undo-notification undo-notification-error undo-show';
+    notification.innerHTML = `
+      <span class="material-symbols-outlined">error</span>
+      <div class="undo-notification-content">
+        <p class="undo-notification-title">Error</p>
+        <p class="undo-notification-text">${message}</p>
+      </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+      notification.classList.remove('undo-show');
+      setTimeout(() => notification.remove(), 3000);
+    }, 4000);
+  }
+
+  saveUndoHistory() {
+    try {
+      localStorage.setItem('referralUndoHistory', JSON.stringify(this.undoStack));
+    } catch (error) {
+      console.warn('Failed to save undo history:', error);
+    }
+  }
+
+  loadUndoHistory() {
+    try {
+      const saved = localStorage.getItem('referralUndoHistory');
+      if (saved) {
+        this.undoStack = JSON.parse(saved);
+        // Filter out actions older than 24 hours
+        const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);
+        this.undoStack = this.undoStack.filter(action => 
+          new Date(action.timestamp).getTime() > oneDayAgo
+        );
+        this.saveUndoHistory();
+      }
+    } catch (error) {
+      console.warn('Failed to load undo history:', error);
+      this.undoStack = [];
+    }
+  }
+
+  clearUndoHistory() {
+    this.undoStack = [];
+    this.saveUndoHistory();
+    this.updateUndoButtonVisibility();
+  }
+}
 
