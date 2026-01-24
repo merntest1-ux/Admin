@@ -919,7 +919,15 @@ initEditReferralModal();
     await loadStudentReferrals(studentId);
   };
 
-  async function loadStudentReferrals(studentId) {
+  // ============================================
+// SOLUTION: Move loadStudentReferrals OUTSIDE DOMContentLoaded
+// ============================================
+
+// ADD THIS FUNCTION BEFORE THE DOMContentLoaded EVENT (near the top of StudentProfile.js)
+// This makes it globally accessible
+
+// Load referrals for a specific student
+async function loadStudentReferrals(studentId) {
   const container = document.getElementById('referralsListContainer');
   container.innerHTML = '<p style="text-align: center; color: #6b7280;">Loading referrals...</p>';
   
@@ -1070,363 +1078,8 @@ initEditReferralModal();
     `;
   }
 }
-
- // --------------------------
-  // HANDLE REFERRAL FORM SUBMISSION
-  // --------------------------
-  if (referralForm) {
-    console.log('✓ Attaching submit handler to referral form');
-    
-    referralForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      
-      console.log('📝 Form submitted!');
-
-      // Get all form elements first
-      const studentIdElement = document.getElementById('ref-studentId');
-      const reasonElement = document.getElementById('ref-reason');
-      const referralDateElement = document.getElementById('ref-dateOfInterview');
-      const urgencyElement = document.getElementById('ref-urgency');
-          
-      // Check if all elements exist
-      if (!studentIdElement || !reasonElement || !referralDateElement || !urgencyElement) {
-        console.error('❌ Form elements not found!', {
-          studentId: !!studentIdElement,
-          reason: !!reasonElement,
-          referralDate: !!referralDateElement,
-          urgency: !!urgencyElement
-        });
-        alert('Form error: Required fields not found. Please refresh the page.');
-        return;
-      }
-      
-      // Get values from elements
-      const studentId = studentIdElement.value.trim();
-      const reason = reasonElement.value.trim();
-      const referralDate = referralDateElement.value;
-      const urgency = urgencyElement.value;
-      
-      console.log('📋 Form values:', { studentId, reason, referralDate, urgency });
-      
-      // Validate values are filled
-      if (!studentId || !reason || !referralDate || !urgency) {
-        alert('Please fill in all required fields');
-        return;
-      }
-      
-      // Now create formData object
-      const formData = {
-        studentName: document.getElementById('ref-studentName').value.trim(),
-        studentId: studentId,
-        level: document.getElementById('ref-level').value,
-        grade: document.getElementById('ref-grade').value,
-        referralDate: referralDate,
-        reason: reason,
-        urgency: urgency,
-        description: document.getElementById('ref-description').value.trim() || undefined,
-        referredBy: user.fullName || user.username
-      };
-
-      console.log('🔤 Submitting new referral:', formData);
-
-      try {
-        // Show loading state
-        const submitBtn = referralForm.querySelector('button[type="submit"]');
-        const originalText = submitBtn.innerHTML;
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span class="material-symbols-outlined">hourglass_empty</span> Creating...';
-        
-        const response = await apiClient.post('/referrals', formData);
-        
-        console.log('📤 Response:', response);
-        
-        // Restore button
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalText;
-        
-        if (response.success) {
-          console.log('✓ Referral created successfully!');
-          
-          // *** ADD TO UNDO STACK - NEW CODE ***
-          if (undoManager && response.data && response.data._id) {
-            undoManager.addToUndoStack({
-              type: 'referral_added',
-              referralId: response.data._id,
-              referralData: formData,
-              description: `Referral for ${formData.studentName}`
-            });
-          }
-          // *** END NEW CODE ***
-          
-          // Close modal first
-          referralModal.style.display = 'none';
-          referralForm.reset();
-          
-          // Show success message using custom alert
-          if (typeof customAlert !== 'undefined' && customAlert.success) {
-            customAlert.success('Referral has been created successfully!', 'Success!');
-          } else {
-            alert('✓ Referral created successfully! 🎉');
-          }
-        } else {
-          throw new Error(response.error || response.message || 'Failed to create referral');
-        }
-      } catch (error) {
-        console.error('❌ Error creating referral:', error);
-        
-        // Restore button
-        const submitBtn = referralForm.querySelector('button[type="submit"]');
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = '<span class="material-symbols-outlined">add</span>Submit Referral';
-        }
-        
-        // Show error message using custom alert
-        const errorMsg = error.message || 'Failed to create referral';
-        if (typeof customAlert !== 'undefined' && customAlert.error) {
-          customAlert.error(errorMsg, 'Error!');  
-        } else {
-          alert('❌ Error: ' + errorMsg);
-        }
-      }
-    });
-  } else {
-    console.error('❌ Referral form not found!');
-  }
-});
-     
 // ============================================
-// UNDO FEATURE - REFERRAL UNDO MANAGER
-// ============================================
-
-class ReferralUndoManager {
-  constructor(userObj) {
-    this.undoStack = [];
-    this.maxUndoItems = 10; // Keep last 10 actions
-    this.undoButton = null;
-    this.undoNotification = null;
-    this.user = userObj;  // ← ADD THIS LINE
-    this.init();
-  }
-
-  init() {
-    this.createUndoButton();
-    this.loadUndoHistory();
-    this.updateUndoButtonVisibility();
-  }
-
-  createUndoButton() {
-    // Create floating undo button
-    const button = document.createElement('div');
-    button.id = 'undoButton';
-    button.className = 'undo-floating-button';
-    button.innerHTML = `
-      <button class="undo-btn" title="Undo last action (Ctrl+Z)">
-        <span class="material-symbols-outlined">undo</span>
-        <span class="undo-label">Undo</span>
-      </button>
-      <div class="undo-tooltip"></div>
-    `;
-    document.body.appendChild(button);
-    
-    this.undoButton = button.querySelector('.undo-btn');
-    this.undoButton.addEventListener('click', () => this.performUndo());
-    
-    // Keyboard shortcut (Ctrl+Z)
-    document.addEventListener('keydown', (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
-        e.preventDefault();
-        this.performUndo();
-      }
-    });
-  }
-
-  addToUndoStack(action) {
-    // action = { type: 'referral_added', referralId, referralData, timestamp }
-    
-    if (this.undoStack.length >= this.maxUndoItems) {
-      this.undoStack.shift(); // Remove oldest
-    }
-    
-    this.undoStack.push({
-      ...action,
-      timestamp: new Date(),
-      id: Date.now() // Unique ID for this action
-    });
-
-    // Save to localStorage
-    this.saveUndoHistory();
-    this.updateUndoButtonVisibility();
-    this.showUndoNotification(action);
-  }
-
-  async performUndo() {
-    if (this.undoStack.length === 0) {
-      this.showErrorMessage('Nothing to undo');
-      return;
-    }
-
-    const action = this.undoStack[this.undoStack.length - 1];
-    
-    try {
-      const result = await this.executeUndo(action);
-      
-      if (result.success) {
-        this.undoStack.pop();
-        this.saveUndoHistory();
-        this.updateUndoButtonVisibility();
-        this.showSuccessMessage(`Undid: ${action.description}`);
-      }
-    } catch (error) {
-      console.error('Undo error:', error);
-      this.showErrorMessage(`Failed to undo: ${error.message}`);
-    }
-  }
-
-  async executeUndo(action) {
-    if (action.type === 'referral_added') {
-      return await this.undoReferralAddition(action);
-    }
-    // Add more undo types as needed
-    return { success: false, error: 'Unknown action type' };
-  }
-
-  async undoReferralAddition(action) {
-  console.log('Undoing referral addition:', action.referralId);
-  
-  try {
-    // Use PUT to mark referral as deleted (soft delete)
-    const response = await apiClient.put(`/referrals/${action.referralId}`, {
-      status: 'Deleted',
-      deletedAt: new Date().toISOString(),
-      deletedBy: this.user.fullName || this.user.username  // ← CHANGE user TO this.user
-    });
-    
-    if (response.success) {
-      console.log('✓ Referral marked as deleted successfully');
-      return { success: true };
-    } else {
-      throw new Error(response.error || 'Failed to delete referral');
-    }
-  } catch (error) {
-    console.error('✗ Error deleting referral:', error);
-    throw error;
-  }
-}
-
-  updateUndoButtonVisibility() {
-    if (!this.undoButton) return;
-    
-    if (this.undoStack.length > 0) {
-      this.undoButton.parentElement.classList.add('has-actions');
-      
-      // Update tooltip with latest action
-      const latestAction = this.undoStack[this.undoStack.length - 1];
-      const tooltip = this.undoButton.parentElement.querySelector('.undo-tooltip');
-      if (tooltip) {
-        tooltip.textContent = `Undo: ${latestAction.description}`;
-      }
-    } else {
-      this.undoButton.parentElement.classList.remove('has-actions');
-    }
-  }
-
-  showUndoNotification(action) {
-    const notification = document.createElement('div');
-    notification.className = 'undo-notification undo-show';
-    notification.innerHTML = `
-      <span class="material-symbols-outlined">check_circle</span>
-      <div class="undo-notification-content">
-        <p class="undo-notification-title">Action recorded</p>
-        <p class="undo-notification-text">${action.description}</p>
-        <p class="undo-notification-hint">Press Ctrl+Z to undo</p>
-      </div>
-    `;
-    
-    document.body.appendChild(notification);
-    
-    // Auto-remove after 4 seconds
-    setTimeout(() => {
-      notification.classList.remove('undo-show');
-      setTimeout(() => notification.remove(), 300);
-    }, 4000);
-  }
-
-  showSuccessMessage(message) {
-    const notification = document.createElement('div');
-    notification.className = 'undo-notification undo-notification-success undo-show';
-    notification.innerHTML = `
-      <span class="material-symbols-outlined">task_alt</span>
-      <div class="undo-notification-content">
-        <p class="undo-notification-title">Success</p>
-        <p class="undo-notification-text">${message}</p>
-      </div>
-    `;
-    
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-      notification.classList.remove('undo-show');
-      setTimeout(() => notification.remove(), 300);
-    }, 3000);
-  }
-
-  showErrorMessage(message) {
-    const notification = document.createElement('div');
-    notification.className = 'undo-notification undo-notification-error undo-show';
-    notification.innerHTML = `
-      <span class="material-symbols-outlined">error</span>
-      <div class="undo-notification-content">
-        <p class="undo-notification-title">Error</p>
-        <p class="undo-notification-text">${message}</p>
-      </div>
-    `;
-    
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-      notification.classList.remove('undo-show');
-      setTimeout(() => notification.remove(), 3000);
-    }, 4000);
-  }
-
-  saveUndoHistory() {
-    try {
-      localStorage.setItem('referralUndoHistory', JSON.stringify(this.undoStack));
-    } catch (error) {
-      console.warn('Failed to save undo history:', error);
-    }
-  }
-
-  loadUndoHistory() {
-    try {
-      const saved = localStorage.getItem('referralUndoHistory');
-      if (saved) {
-        this.undoStack = JSON.parse(saved);
-        // Filter out actions older than 24 hours
-        const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);
-        this.undoStack = this.undoStack.filter(action => 
-          new Date(action.timestamp).getTime() > oneDayAgo
-        );
-        this.saveUndoHistory();
-      }
-    } catch (error) {
-      console.warn('Failed to load undo history:', error);
-      this.undoStack = [];
-    }
-  }
-
-  clearUndoHistory() {
-    this.undoStack = [];
-    this.saveUndoHistory();
-    this.updateUndoButtonVisibility();
-  } 
-}
-
-// ============================================
-// EDIT REFERRAL FEATURE - CORRECTED VERSION
-// Place this at the END of your StudentProfile.js (after the DOMContentLoaded function closes)
+// PLACE ALL YOUR EDIT FUNCTIONS OUTSIDE DOMContentLoaded TOO
 // ============================================
 
 // Check if referral can be edited (within 3 hours)
@@ -1474,7 +1127,6 @@ function formatTimeRemaining(timeRemaining) {
 // Helper function to format date for input field (YYYY-MM-DD)
 function formatDateForInput(dateString) {
   if (!dateString) {
-    // Return today's date if no date provided
     const today = new Date();
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, '0');
@@ -1492,7 +1144,6 @@ function formatDateForInput(dateString) {
 // Helper function to format date for API (YYYY-MM-DD without timezone)
 function formatDateForAPI(dateString) {
   if (!dateString) {
-    // Return today's date in YYYY-MM-DD format
     const today = new Date();
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, '0');
@@ -1500,12 +1151,10 @@ function formatDateForAPI(dateString) {
     return `${year}-${month}-${day}`;
   }
   
-  // If it's already in YYYY-MM-DD format, return as is
   if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
     return dateString;
   }
   
-  // Parse the date
   const date = new Date(dateString);
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -1518,7 +1167,6 @@ window.openEditReferralModal = async (referralId, studentId, studentName) => {
   console.log('📝 Opening edit referral modal for:', referralId);
   
   try {
-    // Fetch the full referral details
     const response = await apiClient.get(`/referrals/${referralId}`);
     
     if (!response.success) {
@@ -1528,7 +1176,6 @@ window.openEditReferralModal = async (referralId, studentId, studentName) => {
     
     const referral = response.data;
     
-    // Check if edit window is still open (within 3 hours)
     if (!canEditReferral(referral.createdAt || referral.referralDate)) {
       showCustomAlert(
         'This referral can no longer be edited. The 3-hour edit window has closed.',
@@ -1537,7 +1184,6 @@ window.openEditReferralModal = async (referralId, studentId, studentName) => {
       return;
     }
     
-    // Show the edit modal
     const editModal = document.getElementById('editReferralModal');
     if (!editModal) {
       console.error('Edit referral modal not found!');
@@ -1546,7 +1192,6 @@ window.openEditReferralModal = async (referralId, studentId, studentName) => {
     
     editModal.style.display = 'block';
     
-    // Populate form with existing data
     setTimeout(() => {
       document.getElementById('edit-referralId').value = referral._id;
       document.getElementById('edit-studentId').value = referral.studentId;
@@ -1557,14 +1202,12 @@ window.openEditReferralModal = async (referralId, studentId, studentName) => {
       document.getElementById('edit-urgency').value = referral.urgency || '';
       document.getElementById('edit-description').value = referral.description || '';
       
-      // AUTO-FILL DATE - Format correctly for date input (YYYY-MM-DD)
       const dateInput = document.getElementById('edit-referralDate');
       const dateToUse = referral.referralDate || referral.createdAt || new Date();
       dateInput.value = formatDateForInput(dateToUse);
       
       console.log('✅ Date auto-filled:', dateInput.value);
       
-      // Display time remaining
       const timeRemaining = getTimeRemainingForEdit(referral.createdAt);
       const timeWarning = document.getElementById('edit-time-warning');
       if (timeWarning && timeRemaining) {
@@ -1572,7 +1215,6 @@ window.openEditReferralModal = async (referralId, studentId, studentName) => {
         timeWarning.style.display = 'block';
       }
       
-      // Store original data for change detection
       document.getElementById('editReferralForm')._originalData = referral;
     }, 50);
     
@@ -1596,19 +1238,14 @@ function setupEditReferralFormHandler() {
     e.stopPropagation();
     
     const referralId = document.getElementById('edit-referralId').value;
-    
-    // FIX: Format date correctly for API (YYYY-MM-DD without timezone)
     const dateValue = document.getElementById('edit-referralDate').value;
     const formattedDate = formatDateForAPI(dateValue);
-    
-    console.log('📋 Date input value:', dateValue);
-    console.log('📋 Formatted date for API:', formattedDate);
     
     const updatedData = {
       reason: document.getElementById('edit-reason').value.trim(),
       urgency: document.getElementById('edit-urgency').value,
       description: document.getElementById('edit-description').value.trim() || undefined,
-      referralDate: formattedDate // Use formatted date (YYYY-MM-DD)
+      referralDate: formattedDate
     };
     
     console.log('📝 Updating referral:', referralId, updatedData);
@@ -1627,23 +1264,20 @@ function setupEditReferralFormHandler() {
       if (response.success) {
         console.log('✅ Referral updated successfully!');
         
-        // Close modal
         const editModal = document.getElementById('editReferralModal');
         editModal.style.display = 'none';
         editForm.reset();
         
-        // Show success message
         if (typeof customAlert !== 'undefined' && customAlert.success) {
           customAlert.success('Referral has been updated successfully!', 'Success!');
         } else {
           alert('✅ Referral updated successfully!');
         }
         
-        // Reload the referrals view if it's open
+        // NOW THIS WILL WORK - loadStudentReferrals is global
         const viewReferralsModal = document.getElementById('viewReferralsModal');
         if (viewReferralsModal && viewReferralsModal.style.display === 'block') {
           const studentId = document.getElementById('edit-studentId').value;
-          // Call loadStudentReferrals which is already defined in your code
           await loadStudentReferrals(studentId);
         }
         
@@ -1678,7 +1312,6 @@ function initEditReferralModal() {
     return;
   }
   
-  // Close button handlers
   if (closeEditModalBtn) {
     closeEditModalBtn.addEventListener('click', () => {
       editModal.style.display = 'none';
@@ -1693,7 +1326,6 @@ function initEditReferralModal() {
     });
   }
   
-  // Close on outside click
   window.addEventListener('click', (e) => {
     if (e.target === editModal) {
       editModal.style.display = 'none';
@@ -1701,8 +1333,7 @@ function initEditReferralModal() {
     }
   });
   
-  // Setup form submission
   setupEditReferralFormHandler();
   
   console.log('✅ Edit referral modal initialized');
-}
+}});
