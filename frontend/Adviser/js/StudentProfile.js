@@ -339,24 +339,36 @@ gradeFilter.addEventListener('change', filterStudents);
 // --------------------------
 
 // Open Add Student Modal
-addStudentBtn.addEventListener('click', () => {
-  addStudentModal.style.display = 'block';
-  resetAddStudentForm();
-});
+if (addStudentBtn) {
+  addStudentBtn.addEventListener('click', () => {
+    if (addStudentModal) {
+      addStudentModal.style.display = 'block';
+      resetAddStudentForm();
+    }
+  });
+}
 
 // Close Add Student Modal
 const closeAddStudentModal = document.getElementById('closeAddStudentModal');
 const cancelAddStudentBtn = document.getElementById('cancelAddStudentBtn');
 
-closeAddStudentModal.addEventListener('click', () => {
-  addStudentModal.style.display = 'none';
-  resetAddStudentForm();
-});
+if (closeAddStudentModal) {
+  closeAddStudentModal.addEventListener('click', () => {
+    if (addStudentModal) {
+      addStudentModal.style.display = 'none';
+      resetAddStudentForm();
+    }
+  });
+}
 
-cancelAddStudentBtn.addEventListener('click', () => {
-  addStudentModal.style.display = 'none';
-  resetAddStudentForm();
-});
+if (cancelAddStudentBtn) {
+  cancelAddStudentBtn.addEventListener('click', () => {
+    if (addStudentModal) {
+      addStudentModal.style.display = 'none';
+      resetAddStudentForm();
+    }
+  });
+}
 
 // Handle Add Student Form Level Change
 const addStudentLevel = document.getElementById('addStudentLevel');
@@ -383,67 +395,73 @@ addStudentLevel.addEventListener('change', function() {
 // Handle Add Student Form Submission
 const addStudentForm = document.getElementById('addStudentForm');
 
-addStudentForm.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  
-  const formData = {
-    studentId: document.getElementById('addStudentId').value.trim(),
-    firstName: document.getElementById('addStudentFirstName').value.trim(),
-    middleName: document.getElementById('addStudentMiddleName').value.trim() || undefined,
-    lastName: document.getElementById('addStudentLastName').value.trim(),
-    level: document.getElementById('addStudentLevel').value,
-    grade: document.getElementById('addStudentGrade').value,
-    contactNumber: document.getElementById('addStudentContact').value.trim()
-  };
+if (addStudentForm) {
+  addStudentForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = {
+      studentId: document.getElementById('addStudentId')?.value.trim(),
+      firstName: document.getElementById('addStudentFirstName')?.value.trim(),
+      middleName: document.getElementById('addStudentMiddleName')?.value.trim() || undefined,
+      lastName: document.getElementById('addStudentLastName')?.value.trim(),
+      level: document.getElementById('addStudentLevel')?.value,
+      grade: document.getElementById('addStudentGrade')?.value,
+      contactNumber: document.getElementById('addStudentContact')?.value.trim()
+    };
 
-  console.log('ðŸ“¤ Adding new student:', formData);
+    console.log('📤 Adding new student:', formData);
 
-  try {
-    const submitBtn = addStudentForm.querySelector('button[type="submit"]');
-    const originalText = submitBtn.innerHTML;
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="material-symbols-outlined">hourglass_empty</span> Adding...';
-    
-    const response = await apiClient.post('/students', formData);
-    
-    console.log('ðŸ“¥ Response:', response);
-    
-    submitBtn.disabled = false;
-    submitBtn.innerHTML = originalText;
-    
-    if (response.success) {
-      console.log('âœ… Student added successfully!');
-      
-      addStudentModal.style.display = 'none';
-      resetAddStudentForm();
-      
-      if (typeof customAlert !== 'undefined' && customAlert.success) {
-        customAlert.success('Student has been added successfully!', 'Success!');
-      } else {
-        alert('âœ… Student added successfully! ðŸŽ‰');
+    try {
+      const submitBtn = addStudentForm.querySelector('button[type="submit"]');
+      const originalText = submitBtn?.innerHTML;
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="material-symbols-outlined">hourglass_empty</span> Adding...';
       }
       
-      loadStudents();
-    } else {
-      throw new Error(response.error || response.message || 'Failed to add student');
+      const response = await apiClient.post('/students', formData);
+      
+      console.log('📥 Response:', response);
+      
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+      }
+      
+      if (response.success) {
+        console.log('✅ Student added successfully!');
+        
+        if (addStudentModal) addStudentModal.style.display = 'none';
+        resetAddStudentForm();
+        
+        if (typeof customAlert !== 'undefined' && customAlert.success) {
+          customAlert.success('Student has been added successfully!', 'Success!');
+        } else {
+          alert('✅ Student added successfully! 🎉');
+        }
+        
+        loadStudents();
+      } else {
+        throw new Error(response.error || response.message || 'Failed to add student');
+      }
+    } catch (error) {
+      console.error('❌ Error adding student:', error);
+      
+      const submitBtn = addStudentForm.querySelector('button[type="submit"]');
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span class="material-symbols-outlined">person_add</span>Add Student';
+      }
+      
+      const errorMsg = error.message || 'Failed to add student';
+      if (typeof customAlert !== 'undefined' && customAlert.error) {
+        customAlert.error(errorMsg, 'Error!');  
+      } else {
+        alert('❌ Error: ' + errorMsg);
+      }
     }
-  } catch (error) {
-    console.error('âŒ Error adding student:', error);
-    
-    const submitBtn = addStudentForm.querySelector('button[type="submit"]');
-    if (submitBtn) {
-      submitBtn.disabled = false;
-      submitBtn.innerHTML = '<span class="material-symbols-outlined">person_add</span>Add Student';
-    }
-    
-    const errorMsg = error.message || 'Failed to add student';
-    if (typeof customAlert !== 'undefined' && customAlert.error) {
-      customAlert.error(errorMsg, 'Error!');  
-    } else {
-      alert('âŒ Error: ' + errorMsg);
-    }
-  }
-});
+  });
+}
 
 function resetAddStudentForm() {
   addStudentForm.reset();
@@ -1361,3 +1379,4 @@ class ReferralUndoManager {
     this.updateUndoButtonVisibility();
   }
 }
+
