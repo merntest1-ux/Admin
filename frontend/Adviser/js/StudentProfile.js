@@ -459,12 +459,16 @@ function resetAddStudentForm() {
 
   // Close modals
   const closeButtons = document.querySelectorAll('.close');
-  closeButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      uploadModal.style.display = 'none';
-      resultsModal.style.display = 'none';
+  if (closeButtons && closeButtons.length > 0) {
+    closeButtons.forEach(btn => {
+      if (btn) {
+        btn.addEventListener('click', () => {
+          if (uploadModal) uploadModal.style.display = 'none';
+          if (resultsModal) resultsModal.style.display = 'none';
+        });
+      }
     });
-  });
+  }
 
   cancelUploadBtn.addEventListener('click', () => {
     uploadModal.style.display = 'none';
@@ -821,8 +825,8 @@ window.addEventListener('click', (e) => {
     if (reasonField) reasonField.value = '';
     
     console.log('✅ All fields populated successfully');
-    
-    // Setup clear form button handler
+
+  // Setup clear form button handler
     const clearFormBtn = document.getElementById('clearReferralFormBtn');
     if (clearFormBtn) {
       clearFormBtn.onclick = () => {
@@ -839,6 +843,7 @@ window.addEventListener('click', (e) => {
     }
   }, 50);
 };
+
 
   // Function to show form clear notification
   function showFormClearNotification() {
@@ -1356,4 +1361,3 @@ class ReferralUndoManager {
     this.updateUndoButtonVisibility();
   }
 }
-
