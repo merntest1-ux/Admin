@@ -398,9 +398,7 @@
     </div>
   </div>
 
-  <!-- Add this AFTER View Referrals Modal, BEFORE the closing </main> tag -->
-
-<!-- Edit Referral Modal -->
+  <!-- UPDATED Edit Referral Modal with AUTO-FILL DATE -->
 <div id="editReferralModal" class="modal">
   <div class="modal-content">
     <div class="modal-header">
@@ -495,14 +493,47 @@
     </div>
   </div>
 </div>
-  
-  
 
-  <script>
-    document.querySelector('.mobile-menu-toggle').addEventListener('click', () => {
-      document.querySelector('.sidebar').classList.toggle('mobile-active');
-    });
-  </script>
+<script>
+// Auto-fill date field when edit modal opens
+// Add this to your StudentProfile.js
+
+document.addEventListener('DOMContentLoaded', function() {
+  // Get the date input field
+  const dateInput = document.getElementById('edit-referralDate');
+  
+  if (dateInput) {
+    // Set today's date as default
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    dateInput.value = `${year}-${month}-${day}`;
+  }
+});
+
+// Override the openEditReferralModal function
+const originalOpenEditReferralModal = window.openEditReferralModal;
+
+window.openEditReferralModal = async function(referralId, studentId, studentName) {
+  // Call the original function first
+  if (originalOpenEditReferralModal) {
+    await originalOpenEditReferralModal(referralId, studentId, studentName);
+  }
+  
+  // Then auto-fill the date
+  setTimeout(() => {
+    const dateInput = document.getElementById('edit-referralDate');
+    if (dateInput && !dateInput.value) {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const day = String(today.getDate()).padStart(2, '0');
+      dateInput.value = `${year}-${month}-${day}`;
+    }
+  }, 100);
+};
+</script>
   
   <!-- Load API Client first -->
   <script src="../../api/api-client.js"></script>
