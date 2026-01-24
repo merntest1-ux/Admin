@@ -1,14 +1,14 @@
-// routes/activityLogs.js
+// routes/activityLogs.js (MongoDB Version)
 const express = require('express');
 const router = express.Router();
-const { authenticateToken, authorizeRoles } = require('../middleware/auth');
-const pool = require('../config/database');
+const ActivityLog = require('../models/ActivityLog');
+const { auth, authorizeRoles } = require('../middleware/auth');
 
 /**
  * GET /api/activity-logs
  * Get all activity logs (Admin and Counselor only)
  */
-router.get('/', authenticateToken, authorizeRoles('admin', 'counselor'), async (req, res) => {
+router.get('/', auth, authorizeRoles('Admin', 'Counselor'), async (req, res) => {
   try {
     const {
       action,
@@ -21,124 +21,81 @@ router.get('/', authenticateToken, authorizeRoles('admin', 'counselor'), async (
       offset = 0
     } = req.query;
 
-    let query = `
-      SELECT 
-        id,
-        user_id,
-        user_name,
-        action,
-        entity_type,
-        entity_id,
-        student_name,
-        referral_id,
-        description,
-        changes,
-        ip_address,
-        user_agent,
-        timestamp
-      FROM activity_logs
-      WHERE 1=1
-    `;
-    const params = [];
+    let filter = {};
 
     // Apply filters
     if (action) {
-      query += ' AND action = ?';
-      params.push(action);
+      filter.action = action;
     }
 
     if (entityType) {
-      query += ' AND entity_type = ?';
-      params.push(entityType);
+      filter.entityType = entityType;
     }
 
     if (userId) {
-      query += ' AND user_id = ?';
-      params.push(userId);
+      filter.user = userId;
     }
 
-    if (startDate) {
-      query += ' AND timestamp >= ?';
-      params.push(startDate);
-    }
-
-    if (endDate) {
-      query += ' AND timestamp <= ?';
-      params.push(endDate);
+    if (startDate || endDate) {
+      filter.createdAt = {};
+      if (startDate) {
+        filter.createdAt.$gte = new Date(startDate);
+      }
+      if (endDate) {
+        filter.createdAt.$lte = new Date(endDate);
+      }
     }
 
     if (search) {
-      query += ` AND (
-        user_name LIKE ? OR
-        student_name LIKE ? OR
-        referral_id LIKE ? OR
-        description LIKE ?
-      )`;
-      const searchPattern = `%${search}%`;
-      params.push(searchPattern, searchPattern, searchPattern, searchPattern);
+      filter.$or = [
+        { userName: { $regex: search, $options: 'i' } },
+        { studentName: { $regex: search, $options: 'i' } },
+        { referralId: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } }
+      ];
     }
 
-    // Order by most recent first
-    query += ' ORDER BY timestamp DESC';
+    const logs = await ActivityLog.find(filter)
+      .populate('user', 'username fullName role')
+      .sort({ createdAt: -1 })
+      .limit(parseInt(limit))
+      .skip(parseInt(offset));
 
-    // Add pagination
-    query += ' LIMIT ? OFFSET ?';
-    params.push(parseInt(limit), parseInt(offset));
+    const total = await ActivityLog.countDocuments(filter);
 
-    const [logs] = await pool.query(query, params);
-
-    // Parse JSON changes field
-    const processedLogs = logs.map(log => ({
-      ...log,
-      changes: log.changes ? JSON.parse(log.changes) : null
+    // Format response with both field names for frontend compatibility
+    const formattedLogs = logs.map(log => ({
+      id: log._id,
+      user_id: log.user?._id,
+      user_name: log.userName,
+      userName: log.userName,
+      action: log.action,
+      entity_type: log.entityType,
+      entityType: log.entityType,
+      entity_id: log.entityId,
+      entityId: log.entityId,
+      student_name: log.studentName,
+      studentName: log.studentName,
+      referral_id: log.referralId,
+      referralId: log.referralId,
+      description: log.description,
+      changes: log.changes,
+      ip_address: log.ipAddress,
+      ipAddress: log.ipAddress,
+      user_agent: log.userAgent,
+      userAgent: log.userAgent,
+      timestamp: log.createdAt,
+      createdAt: log.createdAt
     }));
-
-    // Get total count for pagination
-    let countQuery = 'SELECT COUNT(*) as total FROM activity_logs WHERE 1=1';
-    const countParams = [];
-
-    if (action) {
-      countQuery += ' AND action = ?';
-      countParams.push(action);
-    }
-    if (entityType) {
-      countQuery += ' AND entity_type = ?';
-      countParams.push(entityType);
-    }
-    if (userId) {
-      countQuery += ' AND user_id = ?';
-      countParams.push(userId);
-    }
-    if (startDate) {
-      countQuery += ' AND timestamp >= ?';
-      countParams.push(startDate);
-    }
-    if (endDate) {
-      countQuery += ' AND timestamp <= ?';
-      countParams.push(endDate);
-    }
-    if (search) {
-      countQuery += ` AND (
-        user_name LIKE ? OR
-        student_name LIKE ? OR
-        referral_id LIKE ? OR
-        description LIKE ?
-      )`;
-      const searchPattern = `%${search}%`;
-      countParams.push(searchPattern, searchPattern, searchPattern, searchPattern);
-    }
-
-    const [countResult] = await pool.query(countQuery, countParams);
-    const total = countResult[0].total;
 
     res.json({
       success: true,
-      data: processedLogs,
+      data: formattedLogs,
       pagination: {
         total,
         limit: parseInt(limit),
         offset: parseInt(offset),
-        hasMore: parseInt(offset) + processedLogs.length < total
+        hasMore: parseInt(offset) + logs.length < total
       }
     });
   } catch (error) {
@@ -155,59 +112,61 @@ router.get('/', authenticateToken, authorizeRoles('admin', 'counselor'), async (
  * GET /api/activity-logs/stats
  * Get activity statistics
  */
-router.get('/stats', authenticateToken, authorizeRoles('admin', 'counselor'), async (req, res) => {
+router.get('/stats', auth, authorizeRoles('Admin', 'Counselor'), async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
 
-    let dateFilter = '';
-    const params = [];
-
-    if (startDate) {
-      dateFilter += ' AND timestamp >= ?';
-      params.push(startDate);
-    }
-    if (endDate) {
-      dateFilter += ' AND timestamp <= ?';
-      params.push(endDate);
+    let dateFilter = {};
+    if (startDate || endDate) {
+      dateFilter.createdAt = {};
+      if (startDate) {
+        dateFilter.createdAt.$gte = new Date(startDate);
+      }
+      if (endDate) {
+        dateFilter.createdAt.$lte = new Date(endDate);
+      }
     }
 
     // Get action counts
-    const [actionStats] = await pool.query(
-      `SELECT action, COUNT(*) as count 
-       FROM activity_logs 
-       WHERE 1=1 ${dateFilter}
-       GROUP BY action`,
-      params
-    );
+    const actionStats = await ActivityLog.aggregate([
+      { $match: dateFilter },
+      { $group: { _id: '$action', count: { $sum: 1 } } },
+      { $project: { action: '$_id', count: 1, _id: 0 } }
+    ]);
 
     // Get entity type counts
-    const [entityStats] = await pool.query(
-      `SELECT entity_type, COUNT(*) as count 
-       FROM activity_logs 
-       WHERE 1=1 ${dateFilter}
-       GROUP BY entity_type`,
-      params
-    );
+    const entityStats = await ActivityLog.aggregate([
+      { $match: dateFilter },
+      { $group: { _id: '$entityType', count: { $sum: 1 } } },
+      { $project: { entity_type: '$_id', count: 1, _id: 0 } }
+    ]);
 
     // Get most active users
-    const [activeUsers] = await pool.query(
-      `SELECT user_name, COUNT(*) as activity_count 
-       FROM activity_logs 
-       WHERE 1=1 ${dateFilter}
-       GROUP BY user_name 
-       ORDER BY activity_count DESC 
-       LIMIT 5`,
-      params
-    );
+    const activeUsers = await ActivityLog.aggregate([
+      { $match: dateFilter },
+      { $group: { _id: '$userName', activity_count: { $sum: 1 } } },
+      { $project: { user_name: '$_id', activity_count: 1, _id: 0 } },
+      { $sort: { activity_count: -1 } },
+      { $limit: 5 }
+    ]);
 
     // Get recent activity trend (last 7 days)
-    const [dailyActivity] = await pool.query(
-      `SELECT DATE(timestamp) as date, COUNT(*) as count 
-       FROM activity_logs 
-       WHERE timestamp >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
-       GROUP BY DATE(timestamp) 
-       ORDER BY date DESC`
-    );
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const dailyActivity = await ActivityLog.aggregate([
+      { $match: { createdAt: { $gte: sevenDaysAgo } } },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: '%Y-%m-%d', date: '$createdAt' }
+          },
+          count: { $sum: 1 }
+        }
+      },
+      { $project: { date: '$_id', count: 1, _id: 0 } },
+      { $sort: { date: -1 } }
+    ]);
 
     res.json({
       success: true,
@@ -232,30 +191,31 @@ router.get('/stats', authenticateToken, authorizeRoles('admin', 'counselor'), as
  * GET /api/activity-logs/my-activity
  * Get current user's activity logs
  */
-router.get('/my-activity', authenticateToken, async (req, res) => {
+router.get('/my-activity', auth, async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user._id;
     const { limit = 50, offset = 0 } = req.query;
 
-    const [logs] = await pool.query(
-      `SELECT 
-        id, action, entity_type, entity_id, student_name, referral_id,
-        description, changes, timestamp
-       FROM activity_logs
-       WHERE user_id = ?
-       ORDER BY timestamp DESC
-       LIMIT ? OFFSET ?`,
-      [userId, parseInt(limit), parseInt(offset)]
-    );
+    const logs = await ActivityLog.find({ user: userId })
+      .sort({ createdAt: -1 })
+      .limit(parseInt(limit))
+      .skip(parseInt(offset));
 
-    const processedLogs = logs.map(log => ({
-      ...log,
-      changes: log.changes ? JSON.parse(log.changes) : null
+    const formattedLogs = logs.map(log => ({
+      id: log._id,
+      action: log.action,
+      entityType: log.entityType,
+      entityId: log.entityId,
+      studentName: log.studentName,
+      referralId: log.referralId,
+      description: log.description,
+      changes: log.changes,
+      timestamp: log.createdAt
     }));
 
     res.json({
       success: true,
-      data: processedLogs
+      data: formattedLogs
     });
   } catch (error) {
     console.error('❌ Error fetching user activity:', error);
@@ -271,19 +231,21 @@ router.get('/my-activity', authenticateToken, async (req, res) => {
  * DELETE /api/activity-logs/old
  * Delete logs older than specified days (Admin only)
  */
-router.delete('/old', authenticateToken, authorizeRoles('admin'), async (req, res) => {
+router.delete('/old', auth, authorizeRoles('Admin'), async (req, res) => {
   try {
     const { days = 90 } = req.query;
 
-    const [result] = await pool.query(
-      'DELETE FROM activity_logs WHERE timestamp < DATE_SUB(NOW(), INTERVAL ? DAY)',
-      [parseInt(days)]
-    );
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - parseInt(days));
+
+    const result = await ActivityLog.deleteMany({
+      createdAt: { $lt: cutoffDate }
+    });
 
     res.json({
       success: true,
-      message: `Deleted ${result.affectedRows} old activity logs`,
-      deletedCount: result.affectedRows
+      message: `Deleted ${result.deletedCount} old activity logs`,
+      deletedCount: result.deletedCount
     });
   } catch (error) {
     console.error('❌ Error deleting old logs:', error);
