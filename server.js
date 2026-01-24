@@ -16,6 +16,9 @@ const adviserRoutes = require('./routes/advisers');
 const publicReferralRoutes = require('./routes/publicReferrals');
 const studentSubmissionsRouter = require('./routes/studentSubmissions');
 const solutionRoutes = require('./routes/solutionRoutes');
+const analyticsRoutes = require('./routes/analytics');
+const aiPrescriptionRoutes = require('./routes/aiPrescriptions');
+const activityLogsRoutes = require('./routes/activityLogs'); // 👈 NEW
 
 const { auth, authorizeRoles } = require('./middleware/auth');
 
@@ -51,7 +54,6 @@ app.use('/api', express.static(path.join(__dirname, 'frontend/api')));
 app.use('/Adviser', express.static(path.join(__dirname, 'frontend/Adviser')));
 app.use('/Staff', express.static(path.join(__dirname, 'frontend/Staff')));
 
-
 // ✅ NEW: Serve public student form directory
 app.use('/student-form', express.static(path.join(__dirname, 'public_student_form'), {
   setHeaders: (res, filePath) => {
@@ -73,15 +75,9 @@ app.use('/api/advisers', adviserRoutes);
 app.use('/api/student-submissions', studentSubmissionsRouter);
 app.use('/api/public-referrals', publicReferralRoutes);
 app.use('/api/solutions', solutionRoutes);
-
-// Import the AI prescription routes
-const aiPrescriptionRoutes = require('./routes/aiPrescriptions');
-
-// Register the routes (add this with your other routes)
 app.use('/api/ai-prescriptions', aiPrescriptionRoutes);
-
-// Make sure you have dotenv configured at the top
-require('dotenv').config();
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/activity-logs', activityLogsRoutes); // 👈 NEW
 
 // ===== Default route - Login Page =====
 app.get('/', (req, res) => {
@@ -169,12 +165,5 @@ app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
   console.log(`📂 Serving frontend from: ${path.join(__dirname, 'frontend')}`);
   console.log(`📋 Student form available at: http://localhost:${PORT}/student-form/Student_Form.html`);
+  console.log(`📊 Activity logs enabled at: /api/activity-logs`); // 👈 NEW
 });
-
-// Import the analytics routes
-const analyticsRoutes = require('./routes/analytics');
-
-// Register the routes
-
-app.use('/api/analytics', analyticsRoutes);
-
