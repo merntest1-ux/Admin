@@ -817,6 +817,9 @@ window.addEventListener('click', (e) => {
     }
   };
 
+  // Initialize Edit Referral Modal
+initEditReferralModal();
+
   // Open Add Referral Modal
   window.openAddReferralModal = (studentDbId, studentId, studentName, level, grade) => {
   console.log('🔓 Opening add referral modal for:', studentName);
@@ -916,134 +919,157 @@ window.addEventListener('click', (e) => {
     await loadStudentReferrals(studentId);
   };
 
-  // Load referrals for a specific student
   async function loadStudentReferrals(studentId) {
-    const container = document.getElementById('referralsListContainer');
-    container.innerHTML = '<p style="text-align: center; color: #6b7280;">Loading referrals...</p>';
+  const container = document.getElementById('referralsListContainer');
+  container.innerHTML = '<p style="text-align: center; color: #6b7280;">Loading referrals...</p>';
+  
+  try {
+    console.log('📥 Loading referrals for student:', studentId);
     
-    try {
-      console.log('ðŸ“¥ Loading referrals for student:', studentId);
+    const response = await apiClient.getMyReferrals();
+    
+    if (response.success) {
+      const allReferrals = response.data || [];
+      // Filter referrals for this specific student (exclude deleted)
+      const referrals = allReferrals.filter(ref => 
+        ref.studentId === studentId && ref.status !== 'Deleted'
+      );
+      console.log(`✓ Loaded ${referrals.length} referrals for student ${studentId}`);
       
-      // Use teacher's authorized endpoint and filter by studentId on frontend
-      const response = await apiClient.getMyReferrals();
-      
-      if (response.success) {
-        const allReferrals = response.data || [];
-        // Filter referrals for this specific student
-        const referrals = allReferrals.filter(ref => ref.studentId === studentId && ref.status !== 'Deleted');
-        console.log(`âœ… Loaded ${referrals.length} referrals for student ${studentId}`);
-        
-        if (referrals.length === 0) {
-          container.innerHTML = `
-            <div style="text-align: center; padding: 2rem; color: #6b7280;">
-              <span class="material-symbols-outlined" style="font-size: 48px; color: #333;">assignment</span>
-              <p>No referrals found for this student.</p>
-            </div>
-          `;
-          return;
-        }
-        
-        // Display referrals
-        container.innerHTML = referrals.map(referral => {
-          // Fix date timezone issue - parse date string directly
-          const dateString = referral.referralDate || referral.createdAt;
-          let formattedDate;
-          
-          try {
-            // If date is in ISO format (YYYY-MM-DD), parse it without timezone conversion
-            if (typeof dateString === 'string' && dateString.includes('-')) {
-              const [year, month, day] = dateString.split('T')[0].split('-');
-              const date = new Date(year, month - 1, day);
-              formattedDate = date.toLocaleDateString('en-US', { 
-                year: 'numeric', 
-                month: 'short', 
-                day: 'numeric' 
-              });
-            } else {
-              // Fallback to normal date parsing
-              const date = new Date(dateString);
-              formattedDate = date.toLocaleDateString('en-US', { 
-                year: 'numeric', 
-                month: 'short', 
-                day: 'numeric' 
-              });
-            }
-          } catch (error) {
-            console.error('Date parsing error:', error);
-            formattedDate = 'Invalid Date';
-          }
-
-          const statusClass = referral.status.toLowerCase().replace(/\s+/g, '-');
-          const severityClass = (referral.severity || 'Pending Assessment').toLowerCase().replace(/\s+/g, '-');
-          
-          // Show severity only if status is NOT "Pending" or "Under Review"
-          const shouldShowSeverity = referral.status !== 'Pending' && referral.status !== 'Under Review';
-
-          return `
-            <div class="referral-item">
-              <div class="referral-header">
-                <span class="referral-id">${referral.referralId || 'N/A'}</span>
-                <span class="referral-date">${formattedDate}</span>
-              </div>
-              
-              <div class="referral-details">
-                <div class="referral-detail">
-                  <span class="detail-label">Status</span>
-                  <span class="status-badge status-${statusClass}">${referral.status}</span>
-                </div>
-                ${shouldShowSeverity ? `
-                  <div class="referral-detail">
-                    <span class="detail-label">Severity</span>
-                    <span class="severity-badge severity-${severityClass}">${referral.severity || 'Pending Assessment'}</span>
-                  </div>
-                ` : ''}
-                ${referral.category ? `
-                  <div class="referral-detail">
-                    <span class="detail-label">Category</span>
-                    <span class="detail-value">${referral.category}</span>
-                  </div>
-                ` : ''}
-                <div class="referral-detail">
-                  <span class="detail-label">Referred By</span>
-                  <span class="detail-value">${referral.referredBy || 'N/A'}</span>
-                </div>
-              </div>
-              
-              <div class="referral-reason">
-                <strong>Reason:</strong>
-                <p>${referral.reason}</p>
-              </div>
-              
-              ${referral.description ? `
-                <div class="referral-reason" style="border-left-color: #3b82f6; background: rgba(59, 130, 246, 0.1);">
-                  <strong style="color: #3b82f6;">Description:</strong>
-                  <p>${referral.description}</p>
-                </div>
-              ` : ''}
-              
-              ${referral.notes ? `
-                <div class="referral-reason" style="border-left-color: #a78bfa; background: rgba(167, 139, 250, 0.1);">
-                  <strong style="color: #a78bfa;">Consultation Notes:</strong>
-                  <p>${referral.notes}</p>
-                </div>
-              ` : ''}
-            </div>
-          `;
-        }).join('');
-        
-      } else {
-        throw new Error(response.error || 'Failed to load referrals');
+      if (referrals.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 2rem; color: #6b7280;">
+            <span class="material-symbols-outlined" style="font-size: 48px; color: #333;">assignment</span>
+            <p>No referrals found for this student.</p>
+          </div>
+        `;
+        return;
       }
-    } catch (error) {
-      console.error('âŒ Error loading referrals:', error);
-      container.innerHTML = `
-        <div style="text-align: center; padding: 2rem; color: #ef4444;">
-          <span class="material-symbols-outlined" style="font-size: 48px;">error</span>
-          <p>Failed to load referrals: ${error.message}</p>
-        </div>
-      `;
+      
+      // Display referrals
+      container.innerHTML = referrals.map(referral => {
+        const dateString = referral.referralDate || referral.createdAt;
+        let formattedDate;
+        
+        try {
+          if (typeof dateString === 'string' && dateString.includes('-')) {
+            const [year, month, day] = dateString.split('T')[0].split('-');
+            const date = new Date(year, month - 1, day);
+            formattedDate = date.toLocaleDateString('en-US', { 
+              year: 'numeric', 
+              month: 'short', 
+              day: 'numeric' 
+            });
+          } else {
+            const date = new Date(dateString);
+            formattedDate = date.toLocaleDateString('en-US', { 
+              year: 'numeric', 
+              month: 'short', 
+              day: 'numeric' 
+            });
+          }
+        } catch (error) {
+          console.error('Date parsing error:', error);
+          formattedDate = 'Invalid Date';
+        }
+
+        const statusClass = referral.status.toLowerCase().replace(/\s+/g, '-');
+        const severityClass = (referral.severity || 'Pending Assessment').toLowerCase().replace(/\s+/g, '-');
+        const shouldShowSeverity = referral.status !== 'Pending' && referral.status !== 'Under Review';
+
+        // Check if referral can still be edited (within 3 hours)
+        const canEdit = canEditReferral(referral.createdAt);
+        const timeRemaining = getTimeRemainingForEdit(referral.createdAt);
+        
+        return `
+          <div class="referral-item">
+            <div class="referral-header">
+              <span class="referral-id">${referral.referralId || 'N/A'}</span>
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <span class="referral-date">${formattedDate}</span>
+                ${canEdit ? `
+                  <span style="font-size: 12px; color: #10b981; background: rgba(16, 185, 129, 0.1); 
+                               padding: 4px 8px; border-radius: 4px; font-weight: 600;">
+                    ⏱️ Editable
+                  </span>
+                ` : ''}
+              </div>
+            </div>
+            
+            <div class="referral-details">
+              <div class="referral-detail">
+                <span class="detail-label">Status</span>
+                <span class="status-badge status-${statusClass}">${referral.status}</span>
+              </div>
+              ${shouldShowSeverity ? `
+                <div class="referral-detail">
+                  <span class="detail-label">Severity</span>
+                  <span class="severity-badge severity-${severityClass}">${referral.severity || 'Pending Assessment'}</span>
+                </div>
+              ` : ''}
+              ${referral.category ? `
+                <div class="referral-detail">
+                  <span class="detail-label">Category</span>
+                  <span class="detail-value">${referral.category}</span>
+                </div>
+              ` : ''}
+              <div class="referral-detail">
+                <span class="detail-label">Referred By</span>
+                <span class="detail-value">${referral.referredBy || 'N/A'}</span>
+              </div>
+            </div>
+            
+            <div class="referral-reason">
+              <strong>Reason:</strong>
+              <p>${referral.reason}</p>
+            </div>
+            
+            ${referral.description ? `
+              <div class="referral-reason" style="border-left-color: #3b82f6; background: rgba(59, 130, 246, 0.1);">
+                <strong style="color: #3b82f6;">Description:</strong>
+                <p>${referral.description}</p>
+              </div>
+            ` : ''}
+            
+            ${referral.notes ? `
+              <div class="referral-reason" style="border-left-color: #a78bfa; background: rgba(167, 139, 250, 0.1);">
+                <strong style="color: #a78bfa;">Consultation Notes:</strong>
+                <p>${referral.notes}</p>
+              </div>
+            ` : ''}
+
+            <!-- Action Buttons -->
+            <div class="referral-actions" style="display: flex; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
+              ${canEdit ? `
+                <button class="btn-action btn-edit-referral" 
+                        onclick="openEditReferralModal('${referral._id}', '${referral.studentId}', '${referral.studentName.replace(/'/g, "\\'")}')">
+                  <span class="material-symbols-outlined">edit</span>
+                  Edit (${timeRemaining ? formatTimeRemaining(timeRemaining) : 'expired'})
+                </button>
+              ` : `
+                <button class="btn-action" style="opacity: 0.5; cursor: not-allowed;" disabled>
+                  <span class="material-symbols-outlined">edit</span>
+                  Edit (Expired)
+                </button>
+              `}
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+    } else {
+      throw new Error(response.error || 'Failed to load referrals');
     }
+  } catch (error) {
+    console.error('❌ Error loading referrals:', error);
+    container.innerHTML = `
+      <div style="text-align: center; padding: 2rem; color: #ef4444;">
+        <span class="material-symbols-outlined" style="font-size: 48px;">error</span>
+        <p>Failed to load referrals: ${error.message}</p>
+      </div>
+    `;
   }
+}
 
  // --------------------------
   // HANDLE REFERRAL FORM SUBMISSION
@@ -1395,6 +1421,232 @@ class ReferralUndoManager {
     this.undoStack = [];
     this.saveUndoHistory();
     this.updateUndoButtonVisibility();
+  } 
+}
+
+// ============================================
+// EDIT REFERRAL FEATURE - 3 HOUR WINDOW
+// ============================================
+
+// Check if referral can be edited (within 3 hours)
+function canEditReferral(referralDate) {
+  if (!referralDate) return false;
+  
+  const now = new Date();
+  const referralTime = new Date(referralDate);
+  const threeHoursInMs = 3 * 60 * 60 * 1000;
+  
+  const timeDiff = now - referralTime;
+  
+  return timeDiff <= threeHoursInMs;
+}
+
+// Get time remaining until edit window closes
+function getTimeRemainingForEdit(referralDate) {
+  if (!referralDate) return null;
+  
+  const now = new Date();
+  const referralTime = new Date(referralDate);
+  const threeHoursInMs = 3 * 60 * 60 * 1000;
+  
+  const timeRemaining = threeHoursInMs - (now - referralTime);
+  
+  if (timeRemaining <= 0) return null;
+  
+  const hours = Math.floor(timeRemaining / (60 * 60 * 1000));
+  const minutes = Math.floor((timeRemaining % (60 * 60 * 1000)) / (60 * 1000));
+  
+  return { hours, minutes, ms: timeRemaining };
+}
+
+// Format time remaining display
+function formatTimeRemaining(timeRemaining) {
+  if (!timeRemaining) return 'Edit window closed';
+  
+  if (timeRemaining.hours > 0) {
+    return `${timeRemaining.hours}h ${timeRemaining.minutes}m remaining`;
+  } else {
+    return `${timeRemaining.minutes}m remaining`;
   }
 }
+
+// Open Edit Referral Modal
+window.openEditReferralModal = async (referralId, studentId, studentName) => {
+  console.log('📝 Opening edit referral modal for:', referralId);
+  
+  try {
+    // Fetch the full referral details
+    const response = await apiClient.get(`/referrals/${referralId}`);
+    
+    if (!response.success) {
+      showCustomAlert('Failed to load referral details', 'error');
+      return;
+    }
+    
+    const referral = response.data;
+    
+    // Check if edit window is still open (within 3 hours)
+    if (!canEditReferral(referral.createdAt || referral.referralDate)) {
+      showCustomAlert(
+        'This referral can no longer be edited. The 3-hour edit window has closed.',
+        'error'
+      );
+      return;
+    }
+    
+    // Show the edit modal
+    const editModal = document.getElementById('editReferralModal');
+    if (!editModal) {
+      console.error('Edit referral modal not found!');
+      return;
+    }
+    
+    editModal.style.display = 'block';
+    
+    // Populate form with existing data
+    setTimeout(() => {
+      document.getElementById('edit-referralId').value = referral._id;
+      document.getElementById('edit-studentId').value = referral.studentId;
+      document.getElementById('edit-studentName').value = referral.studentName || studentName;
+      document.getElementById('edit-level').value = referral.level;
+      document.getElementById('edit-grade').value = referral.grade;
+      document.getElementById('edit-reason').value = referral.reason || '';
+      document.getElementById('edit-urgency').value = referral.urgency || '';
+      document.getElementById('edit-description').value = referral.description || '';
+      document.getElementById('edit-referralDate').value = referral.referralDate || '';
+      
+      // Display time remaining
+      const timeRemaining = getTimeRemainingForEdit(referral.createdAt);
+      const timeWarning = document.getElementById('edit-time-warning');
+      if (timeWarning && timeRemaining) {
+        timeWarning.textContent = `⏱️ ${formatTimeRemaining(timeRemaining)}`;
+        timeWarning.style.display = 'block';
+      }
+      
+      // Store original data for change detection
+      document.getElementById('editReferralForm')._originalData = referral;
+    }, 50);
+    
+  } catch (error) {
+    console.error('Error loading referral:', error);
+    showCustomAlert('Failed to load referral for editing', 'error');
+  }
+};
+
+// Handle Edit Referral Form Submission
+function setupEditReferralFormHandler() {
+  const editForm = document.getElementById('editReferralForm');
+  
+  if (!editForm) {
+    console.error('Edit referral form not found!');
+    return;
+  }
+  
+  editForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const referralId = document.getElementById('edit-referralId').value;
+    
+    const updatedData = {
+      reason: document.getElementById('edit-reason').value.trim(),
+      urgency: document.getElementById('edit-urgency').value,
+      description: document.getElementById('edit-description').value.trim() || undefined,
+      referralDate: document.getElementById('edit-referralDate').value
+    };
+    
+    console.log('📝 Updating referral:', referralId, updatedData);
+    
+    try {
+      const submitBtn = editForm.querySelector('button[type="submit"]');
+      const originalText = submitBtn.innerHTML;
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="material-symbols-outlined">hourglass_empty</span> Saving...';
+      
+      const response = await apiClient.put(`/referrals/${referralId}`, updatedData);
+      
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalText;
+      
+      if (response.success) {
+        console.log('✅ Referral updated successfully!');
+        
+        // Close modal
+        const editModal = document.getElementById('editReferralModal');
+        editModal.style.display = 'none';
+        editForm.reset();
+        
+        // Show success message
+        if (typeof customAlert !== 'undefined' && customAlert.success) {
+          customAlert.success('Referral has been updated successfully!', 'Success!');
+        } else {
+          alert('✅ Referral updated successfully!');
+        }
+        
+        // Reload referrals if viewing them
+        const viewReferralsModal = document.getElementById('viewReferralsModal');
+        if (viewReferralsModal && viewReferralsModal.style.display === 'block') {
+          const studentId = document.getElementById('edit-studentId').value;
+          await loadStudentReferrals(studentId);
+        }
+        
+      } else {
+        throw new Error(response.error || 'Failed to update referral');
+      }
+    } catch (error) {
+      console.error('❌ Error updating referral:', error);
+      
+      const submitBtn = editForm.querySelector('button[type="submit"]');
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<span class="material-symbols-outlined">edit</span> Save Changes';
+      
+      const errorMsg = error.message || 'Failed to update referral';
+      if (typeof customAlert !== 'undefined' && customAlert.error) {
+        customAlert.error(errorMsg, 'Error!');
+      } else {
+        alert('❌ Error: ' + errorMsg);
+      }
+    }
+  });
+}
+
+// Initialize edit modal handlers when DOM is ready
+function initEditReferralModal() {
+  const editModal = document.getElementById('editReferralModal');
+  const closeEditModalBtn = document.getElementById('closeEditReferralModal');
+  const cancelEditBtn = document.getElementById('cancelEditBtn');
+  
+  if (!editModal) {
+    console.error('Edit referral modal not found in DOM!');
+    return;
+  }
+  
+  // Close button handlers
+  if (closeEditModalBtn) {
+    closeEditModalBtn.addEventListener('click', () => {
+      editModal.style.display = 'none';
+      document.getElementById('editReferralForm').reset();
+    });
+  }
+  
+  if (cancelEditBtn) {
+    cancelEditBtn.addEventListener('click', () => {
+      editModal.style.display = 'none';
+      document.getElementById('editReferralForm').reset();
+    });
+  }
+  
+  // Close on outside click
+  window.addEventListener('click', (e) => {
+    if (e.target === editModal) {
+      editModal.style.display = 'none';
+      document.getElementById('editReferralForm').reset();
+    }
+  });
+  
+  // Setup form submission
+  setupEditReferralFormHandler();
+}
+
+
 
