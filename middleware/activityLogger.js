@@ -1,14 +1,14 @@
-// middleware/activityLogger.js
-const pool = require('../config/database');
+// middleware/activityLogger.js (MongoDB Version)
+const ActivityLog = require('../models/ActivityLog');
 
 /**
- * Log activity to database
+ * Log activity to MongoDB
  * @param {Object} params - Activity parameters
- * @param {number} params.userId - ID of user performing action
+ * @param {string} params.userId - ID of user performing action (MongoDB ObjectId)
  * @param {string} params.userName - Full name of user
  * @param {string} params.action - Action type: 'created', 'updated', 'deleted', 'viewed', 'exported', 'login', 'logout'
  * @param {string} params.entityType - Entity type: 'referral', 'student', 'user', 'category', 'submission', 'system'
- * @param {number} [params.entityId] - ID of entity being acted upon
+ * @param {string} [params.entityId] - ID of entity being acted upon
  * @param {string} [params.studentName] - Name of student (if applicable)
  * @param {string} [params.referralId] - Referral ID (if applicable)
  * @param {string} params.description - Human-readable description
@@ -37,24 +37,21 @@ async function logActivity({
     // Get user agent
     const userAgent = req?.get('user-agent') || null;
 
-    await pool.query(
-      `INSERT INTO activity_logs 
-       (user_id, user_name, action, entity_type, entity_id, student_name, referral_id, description, changes, ip_address, user_agent)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        userId,
-        userName,
-        action,
-        entityType,
-        entityId,
-        studentName,
-        referralId,
-        description,
-        changes ? JSON.stringify(changes) : null,
-        ipAddress,
-        userAgent
-      ]
-    );
+    const activityLog = new ActivityLog({
+      user: userId,
+      userName,
+      action,
+      entityType,
+      entityId,
+      studentName,
+      referralId,
+      description,
+      changes,
+      ipAddress,
+      userAgent
+    });
+
+    await activityLog.save();
 
     console.log(`📝 Activity logged: ${action} ${entityType} by ${userName}`);
   } catch (error) {
