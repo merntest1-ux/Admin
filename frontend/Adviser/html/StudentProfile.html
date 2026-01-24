@@ -397,6 +397,105 @@
       </div>
     </div>
   </div>
+
+  <!-- Add this AFTER View Referrals Modal, BEFORE the closing </main> tag -->
+
+<!-- Edit Referral Modal -->
+<div id="editReferralModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>
+        <span class="material-symbols-outlined">edit</span>
+        Edit Referral
+      </h2>
+      <span class="close" id="closeEditReferralModal">&times;</span>
+    </div>
+    <div class="modal-body">
+      <!-- Time Warning - Shows how much time is left to edit -->
+      <div id="edit-time-warning" 
+           style="display: none; 
+                  background: linear-gradient(135deg, rgba(251, 146, 60, 0.1) 0%, rgba(251, 146, 60, 0.05) 100%);
+                  border-left: 4px solid #fb923c;
+                  padding: 12px;
+                  border-radius: 8px;
+                  margin-bottom: 16px;
+                  color: #ea580c;
+                  font-weight: 600;
+                  font-size: 0.9rem;">
+      </div>
+
+      <form id="editReferralForm" class="referral-form">
+        <input type="hidden" id="edit-referralId">
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="edit-studentName">Student Name</label>
+            <input type="text" id="edit-studentName" readonly>
+          </div>
+          
+          <div class="form-group">
+            <label for="edit-studentId">Student ID</label>
+            <input type="text" id="edit-studentId" readonly>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="edit-level">Level</label>
+            <input type="text" id="edit-level" readonly>
+          </div>
+
+          <div class="form-group">
+            <label for="edit-grade">Grade</label>
+            <input type="text" id="edit-grade" readonly>
+          </div>
+
+          <div class="form-group">
+            <label for="edit-referralDate">Referral Date</label>
+            <input type="date" id="edit-referralDate" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="edit-reason">Reason for Referral *</label>
+          <input type="text" id="edit-reason" placeholder="e.g., Academic concerns, Behavioral issues" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="edit-urgency">Urgency Level *</label>
+            <select id="edit-urgency" required>
+              <option value="">Select Urgency</option>
+              <option value="Low">Low</option>
+              <option value="Medium">Medium</option>
+              <option value="High">High</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="edit-description">Description</label>
+          <textarea id="edit-description" rows="4" placeholder="Detailed description of the concern..."></textarea>
+        </div>
+
+        <div class="info-box" style="background: rgba(251, 146, 60, 0.1); padding: 12px; border-radius: 8px; margin-bottom: 1rem; border: 1px solid rgba(251, 146, 60, 0.3);">
+          <p style="margin: 0; color: #ea580c; font-size: 0.9rem;">
+            ⏱️ <strong>Note:</strong> You can edit this referral within 3 hours of submission. After that, you cannot make changes.
+          </p>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" id="cancelEditBtn">Cancel</button>
+          <button type="submit" class="btn-primary">
+            <span class="material-symbols-outlined">edit</span>
+            Save Changes
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+  
   
 
   <script>
