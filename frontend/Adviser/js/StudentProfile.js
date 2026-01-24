@@ -1425,7 +1425,8 @@ class ReferralUndoManager {
 }
 
 // ============================================
-// EDIT REFERRAL FEATURE - 3 HOUR WINDOW
+// EDIT REFERRAL FEATURE - CORRECTED VERSION
+// Place this at the END of your StudentProfile.js (after the DOMContentLoaded function closes)
 // ============================================
 
 // Check if referral can be edited (within 3 hours)
@@ -1468,6 +1469,48 @@ function formatTimeRemaining(timeRemaining) {
   } else {
     return `${timeRemaining.minutes}m remaining`;
   }
+}
+
+// Helper function to format date for input field (YYYY-MM-DD)
+function formatDateForInput(dateString) {
+  if (!dateString) {
+    // Return today's date if no date provided
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+  
+  const date = new Date(dateString);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+// Helper function to format date for API (YYYY-MM-DD without timezone)
+function formatDateForAPI(dateString) {
+  if (!dateString) {
+    // Return today's date in YYYY-MM-DD format
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+  
+  // If it's already in YYYY-MM-DD format, return as is
+  if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    return dateString;
+  }
+  
+  // Parse the date
+  const date = new Date(dateString);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 // Open Edit Referral Modal
@@ -1513,7 +1556,13 @@ window.openEditReferralModal = async (referralId, studentId, studentName) => {
       document.getElementById('edit-reason').value = referral.reason || '';
       document.getElementById('edit-urgency').value = referral.urgency || '';
       document.getElementById('edit-description').value = referral.description || '';
-      document.getElementById('edit-referralDate').value = referral.referralDate || '';
+      
+      // AUTO-FILL DATE - Format correctly for date input (YYYY-MM-DD)
+      const dateInput = document.getElementById('edit-referralDate');
+      const dateToUse = referral.referralDate || referral.createdAt || new Date();
+      dateInput.value = formatDateForInput(dateToUse);
+      
+      console.log('✅ Date auto-filled:', dateInput.value);
       
       // Display time remaining
       const timeRemaining = getTimeRemainingForEdit(referral.createdAt);
@@ -1548,11 +1597,18 @@ function setupEditReferralFormHandler() {
     
     const referralId = document.getElementById('edit-referralId').value;
     
+    // FIX: Format date correctly for API (YYYY-MM-DD without timezone)
+    const dateValue = document.getElementById('edit-referralDate').value;
+    const formattedDate = formatDateForAPI(dateValue);
+    
+    console.log('📋 Date input value:', dateValue);
+    console.log('📋 Formatted date for API:', formattedDate);
+    
     const updatedData = {
       reason: document.getElementById('edit-reason').value.trim(),
       urgency: document.getElementById('edit-urgency').value,
       description: document.getElementById('edit-description').value.trim() || undefined,
-      referralDate: document.getElementById('edit-referralDate').value
+      referralDate: formattedDate // Use formatted date (YYYY-MM-DD)
     };
     
     console.log('📝 Updating referral:', referralId, updatedData);
@@ -1583,10 +1639,11 @@ function setupEditReferralFormHandler() {
           alert('✅ Referral updated successfully!');
         }
         
-        // Reload referrals if viewing them
+        // Reload the referrals view if it's open
         const viewReferralsModal = document.getElementById('viewReferralsModal');
         if (viewReferralsModal && viewReferralsModal.style.display === 'block') {
           const studentId = document.getElementById('edit-studentId').value;
+          // Call loadStudentReferrals which is already defined in your code
           await loadStudentReferrals(studentId);
         }
         
@@ -1610,7 +1667,7 @@ function setupEditReferralFormHandler() {
   });
 }
 
-// Initialize edit modal handlers when DOM is ready
+// Initialize edit modal handlers
 function initEditReferralModal() {
   const editModal = document.getElementById('editReferralModal');
   const closeEditModalBtn = document.getElementById('closeEditReferralModal');
@@ -1646,7 +1703,6 @@ function initEditReferralModal() {
   
   // Setup form submission
   setupEditReferralFormHandler();
+  
+  console.log('✅ Edit referral modal initialized');
 }
-
-
-
