@@ -779,7 +779,7 @@ window.addEventListener('click', (e) => {
 
   // Open Add Referral Modal
   window.openAddReferralModal = (studentDbId, studentId, studentName, level, grade) => {
-  console.log('ðŸ“ Opening add referral modal for:', studentName);
+  console.log('🔓 Opening add referral modal for:', studentName);
   
   // Show modal first to ensure elements are in DOM
   referralModal.style.display = 'block';
@@ -797,6 +797,7 @@ window.addEventListener('click', (e) => {
     const dateField = document.getElementById('ref-dateOfInterview');
     const urgencyField = document.getElementById('ref-urgency');
     const descriptionField = document.getElementById('ref-description');
+    const reasonField = document.getElementById('ref-reason');
     
     if (studentIdField) studentIdField.value = studentId;
     if (studentNameField) studentNameField.value = studentName;
@@ -813,17 +814,52 @@ window.addEventListener('click', (e) => {
     }
     
     // Reset urgency dropdown to empty
-    if (urgencyField) {
-      urgencyField.value = '';
-      console.log('âœ… All fields populated successfully');
-    } else {
-      console.error('âŒ Urgency field not found!');
-    }
+    if (urgencyField) urgencyField.value = '';
     
-    // Clear description
+    // Clear editable fields
     if (descriptionField) descriptionField.value = '';
+    if (reasonField) reasonField.value = '';
+    
+    console.log('✅ All fields populated successfully');
+    
+    // Setup clear form button handler
+    const clearFormBtn = document.getElementById('clearReferralFormBtn');
+    if (clearFormBtn) {
+      clearFormBtn.onclick = () => {
+        if (confirm('Are you sure you want to clear Reason, Urgency, and Description fields?')) {
+          // Clear only these 3 editable fields
+          if (reasonField) reasonField.value = '';
+          if (urgencyField) urgencyField.value = '';
+          if (descriptionField) descriptionField.value = '';
+          
+          // Show success notification
+          showFormClearNotification();
+        }
+      };
+    }
   }, 50);
 };
+
+  // Function to show form clear notification
+  function showFormClearNotification() {
+    const notification = document.createElement('div');
+    notification.className = 'undo-notification undo-notification-success undo-show';
+    notification.style.bottom = '30px';
+    notification.innerHTML = `
+      <span class="material-symbols-outlined">check_circle</span>
+      <div class="undo-notification-content">
+        <p class="undo-notification-title">Fields Cleared</p>
+        <p class="undo-notification-text">Reason, Urgency, and Description have been reset</p>
+      </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+      notification.classList.remove('undo-show');
+      setTimeout(() => notification.remove(), 300);
+    }, 2000);
+  }
 
   // Open View Referrals Modal
   window.openViewReferralsModal = async (studentId, studentName) => {
