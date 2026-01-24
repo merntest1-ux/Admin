@@ -108,7 +108,7 @@ async function loadUserProfile() {
 // ====================================
 
 // DOM Elements
-let searchInput, levelFilter, severityFilter, statusFilter, gradeFilter, urgencyFilter;
+let searchInput, levelFilter, gradeFilter;
 let viewReferralModal, cancelViewModalBtn;
 let viewAllReferralsModal, allReferralsTable;
 let deleteConfirmModal, confirmDeleteBtn, cancelDeleteBtn;
@@ -198,10 +198,7 @@ function updateReceiptHeader(referral) {
 function initializeElements() {
   searchInput = document.getElementById('searchInput');
   levelFilter = document.getElementById('levelFilter');
-  severityFilter = document.getElementById('severityFilter');
-  statusFilter = document.getElementById('statusFilter');
   gradeFilter = document.getElementById('gradeFilter');
-  urgencyFilter = document.getElementById('urgencyFilter');
   
   viewReferralModal = document.getElementById('viewReferralModal');
   cancelViewModalBtn = document.getElementById('cancelViewModalBtn');
@@ -311,20 +308,8 @@ function setupEventListeners() {
     });
   }
   
-  if (severityFilter) {
-    severityFilter.addEventListener('change', renderGroupedReferrals);
-  }
-  
-  if (statusFilter) {
-    statusFilter.addEventListener('change', renderGroupedReferrals);
-  }
-  
   if (gradeFilter) {
     gradeFilter.addEventListener('change', renderGroupedReferrals);
-  }
-
-  if (urgencyFilter) {
-    urgencyFilter.addEventListener('change', renderGroupedReferrals);
   }
   
   // Form submission
@@ -514,14 +499,10 @@ function renderGroupedReferrals() {
     console.error('Referral table not found');
     return;
   }
-  
   // Get filter values
   const searchTerm = (searchInput?.value || '').toLowerCase();
   const selectedLevel = levelFilter?.value || 'all';
   const selectedGrade = gradeFilter?.value || 'all';
-  const selectedStatus = statusFilter?.value || 'all';
-  const selectedSeverity = severityFilter?.value || 'all';
-  const selectedUrgency = urgencyFilter?.value || 'all';
   
   // Filter grouped referrals
   const filtered = groupedReferrals.filter(student => {
@@ -531,11 +512,8 @@ function renderGroupedReferrals() {
     
     const matchesLevel = selectedLevel === 'all' || student.level === selectedLevel;
     const matchesGrade = selectedGrade === 'all' || normalizeGrade(student.grade) === selectedGrade;
-    const matchesStatus = selectedStatus === 'all' || student.latestReferral.status === selectedStatus;
-    const matchesSeverity = selectedSeverity === 'all' || student.latestReferral.severity === selectedSeverity;
-    const matchesUrgency = selectedUrgency === 'all' || student.latestReferral.urgency === selectedUrgency;
     
-    return matchesSearch && matchesLevel && matchesGrade && matchesStatus && matchesSeverity && matchesUrgency;
+    return matchesSearch && matchesLevel && matchesGrade;
   });
   
   // Update student count
@@ -545,25 +523,13 @@ function renderGroupedReferrals() {
   
   // Render table rows
   if (filtered.length === 0) {
-    table.innerHTML = '<tr><td colspan="10" style="text-align:center; color:#6b7280;">No students with referrals found</td></tr>';
+    table.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#6b7280;">No students with referrals found</td></tr>';
     return;
   }
   
   table.innerHTML = filtered.map(student => {
     const latest = student.latestReferral;
     const formattedDate = formatDate(latest.dateOfInterview || latest.createdAt);
-
-    // Create urgency badge
-    const urgencyClass = latest.urgency ? latest.urgency.toLowerCase() : 'low';
-    const urgencyDisplay = latest.urgency 
-      ? `<span class="urgency-badge urgency-${urgencyClass}">${latest.urgency}</span>`
-      : '<span style="color: #6b7280; font-style: italic;">–</span>';
-    
-    // Hide severity for Pending and Under Review status
-    const showSeverity = latest.status !== 'Pending' && latest.status !== 'Under Review';
-    const severityDisplay = showSeverity 
-      ? `<span class="severity-badge severity-${latest.severity.toLowerCase()}">${latest.severity}</span>`
-      : '<span style="color: #6b7280; font-style: italic;">–</span>';
     
     // Escape single quotes in student name for onclick handler
     const escapedName = student.studentName.replace(/'/g, "\\'");
@@ -577,9 +543,6 @@ function renderGroupedReferrals() {
         <td>
           <span class="referral-count-badge">${student.totalReferrals}</span>
         </td>
-        <td><span class="status-badge status-${latest.status.toLowerCase().replace(/\s+/g, '-')}">${escapeHtml(latest.status)}</span></td>
-        <td>${severityDisplay}</td>
-        <td class="urgency-column">${urgencyDisplay}</td>
         <td class="latest-date">${formattedDate}</td>
         <td>
           <button class="action-btn view-btn" onclick="viewAllReferralsForStudent('${student.studentId}', '${escapedName}')">
