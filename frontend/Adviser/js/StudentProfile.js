@@ -853,7 +853,7 @@ window.addEventListener('click', (e) => {
       if (response.success) {
         const allReferrals = response.data || [];
         // Filter referrals for this specific student
-        const referrals = allReferrals.filter(ref => ref.studentId === studentId);
+        const referrals = allReferrals.filter(ref => ref.studentId === studentId && ref.status !== 'Deleted');
         console.log(`âœ… Loaded ${referrals.length} referrals for student ${studentId}`);
         
         if (referrals.length === 0) {
@@ -1189,23 +1189,28 @@ class ReferralUndoManager {
   }
 
   async undoReferralAddition(action) {
-    console.log('Undoing referral addition:', action.referralId);
+  console.log('Undoing referral addition:', action.referralId);
+  
+  try {
+    // Use PUT to mark referral as deleted (soft delete)
+    // This will work with your current backend permissions!
+    const response = await apiClient.put(`/referrals/${action.referralId}`, {
+      status: 'Deleted',
+      deletedAt: new Date().toISOString(),
+      deletedBy: user.fullName || user.username
+    });
     
-    try {
-      // Call API to delete the referral
-      const response = await apiClient.delete(`/referrals/${action.referralId}`);
-      
-      if (response.success) {
-        console.log('✓ Referral deleted successfully');
-        return { success: true };
-      } else {
-        throw new Error(response.error || 'Failed to delete referral');
-      }
-    } catch (error) {
-      console.error('✗ Error deleting referral:', error);
-      throw error;
+    if (response.success) {
+      console.log('✓ Referral marked as deleted successfully');
+      return { success: true };
+    } else {
+      throw new Error(response.error || 'Failed to delete referral');
     }
+  } catch (error) {
+    console.error('✗ Error deleting referral:', error);
+    throw error;
   }
+}
 
   updateUndoButtonVisibility() {
     if (!this.undoButton) return;
