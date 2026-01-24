@@ -374,7 +374,8 @@ if (cancelAddStudentBtn) {
 const addStudentLevel = document.getElementById('addStudentLevel');
 const addStudentGrade = document.getElementById('addStudentGrade');
 
-addStudentLevel.addEventListener('change', function() {
+if (addStudentLevel && addStudentGrade) {
+  addStudentLevel.addEventListener('change', function() {
   const level = this.value;
   addStudentGrade.innerHTML = '<option value="">Select Grade</option>';
   
@@ -391,6 +392,7 @@ addStudentLevel.addEventListener('change', function() {
     addStudentGrade.disabled = true;
   }
 });
+}
 
 // Handle Add Student Form Submission
 const addStudentForm = document.getElementById('addStudentForm');
@@ -524,36 +526,39 @@ window.addEventListener('click', (e) => {
 });
 
   // Drop zone functionality
-  // Drop zone functionality
-  dropZone.addEventListener('click', () => {
-    fileInput.click();
-  });
+  if (dropZone) {
+    dropZone.addEventListener('click', () => {
+      if (fileInput) fileInput.click();
+    });
 
-  dropZone.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    dropZone.classList.add('dragover');
-  });
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('dragover');
+    });
 
-  dropZone.addEventListener('dragleave', (e) => {
-    e.preventDefault();
-    dropZone.classList.remove('dragover');
-  });
+    dropZone.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+    });
 
-  dropZone.addEventListener('drop', (e) => {
-    e.preventDefault();
-    dropZone.classList.remove('dragover');
-    
-    const files = e.dataTransfer.files;
-    if (files.length > 0) {
-      handleFileSelect(files[0]);
-    }
-  });
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        handleFileSelect(files[0]);
+      }
+    });
+  }
 
-  fileInput.addEventListener('change', (e) => {
-    if (e.target.files.length > 0) {
-      handleFileSelect(e.target.files[0]);
-    }
-  });
+  if (fileInput) {
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files.length > 0) {
+        handleFileSelect(e.target.files[0]);
+      }
+    });
+  }
 
   // Handle file selection
   function handleFileSelect(file) {
@@ -598,7 +603,8 @@ window.addEventListener('click', (e) => {
   }
 
   // Upload file
-  confirmUploadBtn.addEventListener('click', async () => {
+  if (confirmUploadBtn) {
+    confirmUploadBtn.addEventListener('click', async () => {
     if (!selectedFile) {
       showCustomAlert('Please select a file first', 'error');
       return;
@@ -650,6 +656,7 @@ window.addEventListener('click', (e) => {
       resetUploadModal();
     }
   });
+}
 
   // Display upload results
   function displayUploadResults(response) {
