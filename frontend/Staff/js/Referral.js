@@ -686,7 +686,7 @@ async function viewReferral(referralId) {
       }
       
       // Set adviser field
-      const adviserValue = referral.adviser || referral.referredBy || referral.advisorName || referral.teacher || '';
+      const adviserValue = referral.adviser || referral.referredBy || referral.adviserName || referral.teacher || '';
       setInputValue('view-adviser', adviserValue);
       console.log('👤 Adviser set to:', adviserValue);
       
@@ -1031,5 +1031,6 @@ window.openDeleteModal = openDeleteModal;
 window.closeViewModal = closeViewModal;
 window.closeDeleteModal = closeDeleteModal;
 window.closeAllReferralsModal = closeAllReferralsModal;
+
 
 
