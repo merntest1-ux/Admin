@@ -14,9 +14,6 @@ document.addEventListener('DOMContentLoaded', async function() {
   // Setup profile dropdown FIRST
   setupProfileDropdown();
 
-  // Initialize undo manager for referrals
-const undoManager = new ReferralUndoManager(user);
-  
   // Load user profile to show avatar
   await loadUserProfile();
 
@@ -1337,3 +1334,4 @@ function initEditReferralModal() {
   
   console.log('✅ Edit referral modal initialized');
 }});
+
