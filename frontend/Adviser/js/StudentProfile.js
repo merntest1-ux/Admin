@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   setupProfileDropdown();
 
   // Initialize undo manager for referrals
-  const undoManager = new ReferralUndoManager();
+const undoManager = new ReferralUndoManager(user);
   
   // Load user profile to show avatar
   await loadUserProfile();
@@ -1098,11 +1098,12 @@ window.addEventListener('click', (e) => {
 // ============================================
 
 class ReferralUndoManager {
-  constructor() {
+  constructor(userObj) {
     this.undoStack = [];
     this.maxUndoItems = 10; // Keep last 10 actions
     this.undoButton = null;
     this.undoNotification = null;
+    this.user = userObj;  // ← ADD THIS LINE
     this.init();
   }
 
@@ -1193,11 +1194,10 @@ class ReferralUndoManager {
   
   try {
     // Use PUT to mark referral as deleted (soft delete)
-    // This will work with your current backend permissions!
     const response = await apiClient.put(`/referrals/${action.referralId}`, {
       status: 'Deleted',
       deletedAt: new Date().toISOString(),
-      deletedBy: user.fullName || user.username
+      deletedBy: this.user.fullName || this.user.username  // ← CHANGE user TO this.user
     });
     
     if (response.success) {
