@@ -2440,3 +2440,100 @@ a:focus {
     transform: translateX(0);
   }
 }
+
+/* ============================================
+   EDIT REFERRAL MODAL STYLES
+   ============================================ */
+
+#editReferralModal .modal-header {
+  background: linear-gradient(135deg, #fb923c 0%, #ea580c 100%);
+}
+
+#editReferralModal .modal-header h2 {
+  color: #ffffff;
+}
+
+#editReferralModal .modal-header h2 .material-symbols-outlined {
+  color: #ffffff;
+}
+
+#editReferralModal .modal-header .close {
+  color: #ffffff;
+}
+
+#editReferralModal .modal-header .close:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+#editReferralModal .info-box {
+  background: linear-gradient(135deg, rgba(251, 146, 60, 0.1) 0%, rgba(251, 146, 60, 0.05) 100%);
+  border-left: 4px solid #fb923c;
+}
+
+#editReferralModal .info-box p {
+  color: #ea580c;
+  border-left: 3px solid #fb923c;
+}
+
+/* Time Warning Pulsing Animation */
+@keyframes time-warning-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+#edit-time-warning {
+  animation: time-warning-pulse 2s ease-in-out infinite;
+}
+
+/* Readonly field styling */
+#editReferralModal input[readonly],
+#editReferralModal textarea[readonly] {
+  background-color: #f3f4f6;
+  color: #6b7280;
+  cursor: not-allowed;
+  border-color: #e5e7eb;
+}
+
+#editReferralModal input[readonly]:focus,
+#editReferralModal textarea[readonly]:focus {
+  box-shadow: none;
+  border-color: #e5e7eb;
+}
+
+/* Editable field highlighting */
+#editReferralModal input:not([readonly]):focus,
+#editReferralModal textarea:focus,
+#editReferralModal select:focus {
+  border-color: #fb923c;
+  box-shadow: 0 0 0 3px rgba(251, 146, 60, 0.1);
+}
+
+/* Edit Button Styling */
+.btn-edit-referral {
+  background: linear-gradient(135deg, #fb923c 0%, #ea580c 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 4px rgba(251, 146, 60, 0.15) !important;
+}
+
+.btn-edit-referral:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 12px rgba(251, 146, 60, 0.3) !important;
+}
+
+.btn-edit-referral:active {
+  transform: translateY(0) !important;
+  box-shadow: 0 2px 4px rgba(251, 146, 60, 0.2) !important;
+}
+
+.referral-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e5e7eb;
+  flex-wrap: wrap;
+}
