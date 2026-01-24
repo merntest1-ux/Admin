@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Activity Logs - Counselor Portal</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
+  <link rel="stylesheet" href="../css/ActivityLogs.css">
+  <link rel="stylesheet" href="../../assets/css/custom-alert.css">
+</head>
+<body>
+  <!-- Sidebar Navigation -->
+  <aside class="sidebar">
+    <div class="logo-container">
+      <div class="logo-icon">
+        <span class="material-symbols-outlined">psychology</span>
+      </div>
+      <div class="logo-text">
+        <div class="logo-title">Counselor Portal</div>
+        <div class="logo-subtitle">Management System</div>
+      </div>
+    </div>
+
+    <nav class="nav-menu">
+      <div class="nav-section-title">NAVIGATION</div>
+      <a href="Dashboard.html" class="nav-item">
+        <span class="material-symbols-outlined">dashboard</span>
+        <div class="nav-text">
+          <div class="nav-title">Dashboard</div>
+          <div class="nav-subtitle">Overview and statistics</div>
+        </div>
+      </a>
+      <a href="StudentSubmissions.html" class="nav-item">
+        <span class="material-symbols-outlined">assignment_ind</span>
+        <div class="nav-text">
+          <div class="nav-title">Student Submissions</div>
+          <div class="nav-subtitle">View all students submission</div>
+        </div>
+      </a>
+      <a href="Referral.html" class="nav-item">
+        <span class="material-symbols-outlined">article</span>
+        <div class="nav-text">
+          <div class="nav-title">Referrals</div>
+          <div class="nav-subtitle">Manage student referrals</div>
+        </div>
+      </a>
+      <a href="ActivityLogs.html" class="nav-item active">
+        <span class="material-symbols-outlined">history</span>
+        <div class="nav-text">
+          <div class="nav-title">Activity Logs</div>
+          <div class="nav-subtitle">Track system activities</div>
+        </div>
+      </a>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- Header -->
+    <header class="header">
+      <h1 class="page-title">Activity Logs</h1>
+      <div class="user-profile">
+        <div class="dropdown" id="profileDropdown">
+          <div class="profile-image account-icon" id="profileButton"></div>
+          <div class="dropdown-content">
+            <a href="ProfileSettings.html"><span class="material-symbols-outlined">manage_accounts</span>Profile Settings</a>
+            <a href="LoginForm.html"><span class="material-symbols-outlined">logout</span>Logout</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Info Section -->
+    <section class="welcome-section">
+      <div class="info-box">
+        <p><strong>📋 System Activity History</strong></p>
+        <p>Track all actions performed in the system including referral creation, updates, and deletions.</p>
+      </div>
+    </section>
+
+    <!-- Filters and Stats -->
+    <section class="logs-section">
+      <div class="logs-card">
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+          <div class="stat-card stat-primary">
+            <div class="stat-icon">
+              <span class="material-symbols-outlined">timeline</span>
+            </div>
+            <div class="stat-content">
+              <div class="stat-value" id="totalLogs">0</div>
+              <div class="stat-label">Total Activities</div>
+            </div>
+          </div>
+          
+          <div class="stat-card stat-success">
+            <div class="stat-icon">
+              <span class="material-symbols-outlined">add_circle</span>
+            </div>
+            <div class="stat-content">
+              <div class="stat-value" id="createdCount">0</div>
+              <div class="stat-label">Created</div>
+            </div>
+          </div>
+          
+          <div class="stat-card stat-info">
+            <div class="stat-icon">
+              <span class="material-symbols-outlined">edit</span>
+            </div>
+            <div class="stat-content">
+              <div class="stat-value" id="updatedCount">0</div>
+              <div class="stat-label">Updated</div>
+            </div>
+          </div>
+          
+          <div class="stat-card stat-danger">
+            <div class="stat-icon">
+              <span class="material-symbols-outlined">delete</span>
+            </div>
+            <div class="stat-content">
+              <div class="stat-value" id="deletedCount">0</div>
+              <div class="stat-label">Deleted</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters-container">
+          <input type="text" id="searchLogs" placeholder="Search by user, student, or referral ID...">
+          
+          <select id="actionFilter" class="filter-select">
+            <option value="all">All Actions</option>
+            <option value="created">Created</option>
+            <option value="updated">Updated</option>
+            <option value="deleted">Deleted</option>
+          </select>
+          
+          <select id="dateRangeFilter" class="filter-select">
+            <option value="all">All Time</option>
+            <option value="today">Today</option>
+            <option value="week">This Week</option>
+            <option value="month">This Month</option>
+          </select>
+          
+          <button id="clearFilters" class="btn-secondary">
+            <span class="material-symbols-outlined">filter_alt_off</span>
+            Clear Filters
+          </button>
+        </div>
+
+        <!-- Activity Timeline -->
+        <div class="timeline-container" id="activityTimeline">
+          <div class="timeline-loading">
+            <span class="material-symbols-outlined rotating">progress_activity</span>
+            Loading activity logs...
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- View Details Modal -->
+  <div id="detailsModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>
+          <span class="material-symbols-outlined">info</span>
+          Activity Details
+        </h2>
+        <span class="close" onclick="closeDetailsModal()">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div id="activityDetails"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-primary" onclick="closeDetailsModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../api/api-client.js"></script>
+  <script src="../../assets/js/custom-alert.js"></script>
+  <script src="../../js/logout.js"></script>
+  <script src="../js/ActivityLogs.js"></script>
+</body>
+</html>
